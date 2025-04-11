@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import LoginPage from './components/LoginPage';
-import RegisterPage from './components/RegisterPage';
+import LoginPage from './components/Login/LoginPage';
+import RegisterPage from './components/Register/RegisterPage';
 import './styles.css';
 
 function App() {
