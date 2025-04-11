@@ -11,7 +11,7 @@ function LoginPage() {
     // Add authentication logic here
 
     // Sending login data to Django backend
-    fetch('http://localhost:8000/login', {  // Make sure the URL matches your Django URL
+    fetch(' http://127.0.0.1:8000/login', {  // Make sure the URL matches your Django URL
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
