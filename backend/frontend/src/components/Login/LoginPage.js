@@ -4,6 +4,8 @@ import '../../styles.css';
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
