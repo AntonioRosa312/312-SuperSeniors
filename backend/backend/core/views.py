@@ -51,6 +51,7 @@ class LoginView(APIView):
         hashed_token = hash_token(raw_token)
 
         # Store the hashed token
+        AuthToken.objects.filter(user=user).delete()
         AuthToken.objects.create(user=user, token_hash=hashed_token, created_at=now())
 
         # Set cookie and return response
@@ -58,8 +59,10 @@ class LoginView(APIView):
         response.set_cookie(
             key='auth_token',
             value=raw_token,
+            max_age=3600,
             httponly=True,
             samesite='Lax',
             secure=False  # Set to True if you're using HTTPS
         )
+        response.headers["X-Content-Type-Options"] = "nosniff"
         return response
