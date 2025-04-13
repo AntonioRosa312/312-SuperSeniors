@@ -5,6 +5,7 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // CSRF Token extraction
   function getCSRFToken() {
     let cookieValue = null;
     const name = 'csrftoken';
@@ -21,8 +22,14 @@ function LoginPage() {
     return cookieValue;
   }
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!username || !password) {
+      alert('Username or password cannot be empty!');
+      return;
+    }
 
     const response = await fetch('/api/login/', {
       method: 'POST',

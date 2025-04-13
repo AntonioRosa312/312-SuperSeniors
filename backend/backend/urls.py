@@ -16,10 +16,13 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.views.generic import TemplateView
+from .views import IndexView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('', TemplateView.as_view(template_name ="index.html"))
+    path('', IndexView.as_view(), name='index'),
+    path('/api/login/', include('login.urls')), #routes to login app
+    path('/api/register/', include('login.urls')) #routes to login app
 ]

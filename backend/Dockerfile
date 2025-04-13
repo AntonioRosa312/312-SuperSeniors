@@ -1,12 +1,20 @@
-FROM python:3.8
+FROM python:3.8-slim
 
 # Update packages (optional but recommended)
-RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install build tools and required system packages
+RUN apt-get update && apt-get install -y \
+    gcc \
+    build-essential \
+    libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy and install dependencies. Ensure that requirements.txt is in the same folder.
-COPY ../requirements.txt /app/
+#COPY ../requirements.txt /app/
+COPY ../requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the Django entrypoint and project files.
