@@ -19,7 +19,13 @@ from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
 
+from backend.core.views import login_view, register_view  # ✅ Add this line
+
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('', TemplateView.as_view(template_name ="index.html"))
+    path('api/login', login_view),  # ✅ This is your new backend login endpoint
+    path('', TemplateView.as_view(template_name="index.html")),
+
+    path("api/register", register_view),
 ]
+
