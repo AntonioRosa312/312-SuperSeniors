@@ -1,43 +1,65 @@
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+
+import json
+import secrets
+import hashlib
+
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-import json
+from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils.timezone import now
+from django.db import models
 
-@csrf_exempt
-def login_view(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            username = data.get('username')
-            password = data.get('password')
+# Token model (make sure this is in your models.py and migrated)
+from .models import AuthToken
 
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                return JsonResponse({'message': 'Login successful'}, status=200)
-            else:
-                return JsonResponse({'message': 'Invalid credentials'}, status=401)
 
-        except json.JSONDecodeError:
-            return JsonResponse({'message': 'Invalid JSON'}, status=400)
+def hash_token(token):
+    return hashlib.sha256(token.encode()).hexdigest()
 
-    return JsonResponse({'message': 'Only POST allowed'}, status=405)
 
-@csrf_exempt
-def register_view(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            username = data.get('username')
-            password = data.get('password')
+class RegisterView(APIView):
+    def post(self, request):
+        data = request.data
+        username = data.get('username')
+        password = data.get('password')
 
-            if User.objects.filter(username=username).exists():
-                return JsonResponse({'message': 'Username already exists'}, status=400)
+        if not username or not password:
+            return Response({'message': 'Username and password required'}, status=400)
 
-            User.objects.create_user(username=username, password=password)
-            return JsonResponse({'message': 'User registered successfully'}, status=201)
+        if User.objects.filter(username=username).exists():
+            return Response({'message': 'Username already exists'}, status=400)
 
-        except json.JSONDecodeError:
-            return JsonResponse({'message': 'Invalid JSON'}, status=400)
+        User.objects.create_user(username=username, password=password)
+        return Response({'message': 'User registered successfully'}, status=201)
 
-    return JsonResponse({'message': 'Only POST allowed'}, status=405)
+
+class LoginView(APIView):
+    def post(self, request):
+        data = request.data
+        username = data.get('username')
+        password = data.get('password')
+
+        user = authenticate(username=username, password=password)
+        if user is None:
+            return Response({'message': 'Invalid credentials'}, status=401)
+
+        # Generate and hash token
+        raw_token = secrets.token_urlsafe(32)
+        hashed_token = hash_token(raw_token)
+
+        # Store the hashed token
+        AuthToken.objects.create(user=user, token_hash=hashed_token, created_at=now())
+
+        # Set cookie and return response
+        response = Response({'message': 'Login successful'})
+        response.set_cookie(
+            key='auth_token',
+            value=raw_token,
+            httponly=True,
+            samesite='Lax',
+            secure=False  # Set to True if you're using HTTPS
+        )
+        return response

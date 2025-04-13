@@ -1,4 +1,13 @@
 from django.db import models
+from django.contrib.auth.models import User
+
+class AuthToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    token_hash = models.CharField(max_length=64, unique=True)  # SHA-256 is 64 characters
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"AuthToken for {self.user.username}"
 
 class Message(models.Model):
     sender = models.CharField(max_length=100)
@@ -6,4 +15,9 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.sender}: {self.content[:30]}"
+        return f"{self.sender}: {self.content[:25]}"
+
+class HashedToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    hashed_token = models.CharField(max_length=128, unique=True)  # SHA-512 hash
+    created_at = models.DateTimeField(auto_now_add=True)
