@@ -43,8 +43,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./backend:/app
-      - ./backend/logs:/app/logs 
+      - ./backend/logs:/app/backend/logs
 
   # Frontend service for React.
   frontend:

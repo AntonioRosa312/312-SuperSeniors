@@ -159,7 +159,7 @@ LOGGING = {
         'request_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, '../logs/requests.log'),
+            'filename': os.path.join(BASE_DIR, 'backend/logs/requests.log'),
             'formatter': 'custom',
         },
     },
