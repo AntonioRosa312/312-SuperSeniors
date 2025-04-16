@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import '../../styles.css';
+import {useNavigate} from "react-router-dom";
 
 function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,6 +27,7 @@ function RegisterPage() {
   .then(data => {
     if (data.message === 'User registered successfully') {
       alert('Account created! You can now log in.');
+      navigate('/login'); // Navigate to the lobby page
       console.log('Registered successfully');
       // Optionally redirect here (e.g., to login page)
       window.location.href = '/login';

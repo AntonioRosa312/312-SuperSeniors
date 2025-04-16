@@ -16,16 +16,15 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.views.generic import TemplateView
 
 from backend.core.views import LoginView, RegisterView  # ✅ Add this line
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('api/login', LoginView.as_view()),  # ✅ This is your new backend login endpoint
+    path('api/login', LoginView.as_view()),
     path('', TemplateView.as_view(template_name="index.html")),
-
     path("api/register", RegisterView.as_view()),
 
 

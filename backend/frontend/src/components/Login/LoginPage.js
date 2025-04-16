@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import '../../styles.css';
+import { useNavigate } from 'react-router-dom';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,13 +28,17 @@ function LoginPage() {
       .then(response => response.json())
       .then(data => {
         if (data.message === 'Login successful') {
+          alert(username + " You have been signed in!");
+          navigate('/lobby'); // Navigate to the lobby page
           console.log('Logged in successfully');
-          // Redirect to another page, store JWT token, etc.
         } else {
+          alert("There was an issue logging in, did you enter your creds properly?");
           setError(data.message);  // Show the error message from the backend
         }
       })
       .catch(error => {
+        navigate('/lobby'); // Navigate to the lobby page
+        alert("There was an issue logging in, did you enter your creds properly?");
         console.error('Error:', error);
         setError('Something went wrong. Please try again.');
       });
