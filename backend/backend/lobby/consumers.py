@@ -1,83 +1,118 @@
 import json
-
+import hashlib
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-import hashlib
+from backend.backend.core.models import AuthToken
+from .models import LobbyStatus
 
 @database_sync_to_async
-def get_user(auth_token):
-    from backend.core.models import AuthToken
+def get_username(auth_token):
     user = AuthToken.objects.get(token_hash=auth_token)
     return user.user.username
 
-players_list = []
+@database_sync_to_async
+def get_or_create_lobby_status(username):
+    from django.contrib.auth.models import User
+    user = User.objects.get(username=username)
+    lobby_status, _ = LobbyStatus.objects.get_or_create(user=user)
+    return lobby_status
+
+@database_sync_to_async
+def update_color(username, new_color):
+    from django.contrib.auth.models import User
+    user = User.objects.get(username=username)
+    lobby_status, _ = LobbyStatus.objects.get_or_create(user=user)
+    lobby_status.color = new_color
+    lobby_status.save()
+
+@database_sync_to_async
+def toggle_ready(username):
+    from django.contrib.auth.models import User
+    user = User.objects.get(username=username)
+    lobby_status, _ = LobbyStatus.objects.get_or_create(user=user)
+    lobby_status.is_ready = not lobby_status.is_ready
+    lobby_status.save()
+    return lobby_status.is_ready
+
+@database_sync_to_async
+def get_all_players():
+    players = LobbyStatus.objects.all()
+    return [
+        {
+            "username": p.user.username,
+            "color": p.color,
+            "is_ready": p.is_ready,
+            "hole": p.current_hole,
+            "score": p.score
+        }
+        for p in players
+    ]
+
 class LobbyConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
-        self.room_name = "lobby"
         self.room_group_name = "lobby_group"
 
-        # Grab the username from the authenticated user (if they are logged in)
+        # Auth via cookie
         auth_token = hashlib.sha256(self.scope["cookies"].get("auth_token").encode()).hexdigest()
-        username = await get_user(auth_token)
-        self.username = username
-        #add them to current waiting user list
-        players_list.append(self.username)
+        self.username = await get_username(auth_token)
 
-        # Join the room group
+        await get_or_create_lobby_status(self.username)
+
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
         await self.accept()
 
-        # Broadcast the updated players list to the group (other websockets)
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'send_players_list',
-                'players': players_list
-            }
-        )
-        # Send a message back with the user's username
+        await self.broadcast_lobby_state()
+
         await self.send(text_data=json.dumps({
             'type': 'username',
             'username': self.username
         }))
 
     async def disconnect(self, close_code):
-        if self.username in players_list:
-            players_list.remove(self.username)
-
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
+        await self.broadcast_lobby_state()
 
-        # Broadcast the updated players list to the group (other websockets)
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        message_type = data.get('type')
+
+        if message_type == 'set_color':
+            await update_color(self.username, data.get("color"))
+            await self.broadcast_lobby_state()
+
+        elif message_type == 'toggle_ready':
+            await toggle_ready(self.username)
+            await self.broadcast_lobby_state()
+
+        elif message_type == 'request_players':
+            await self.send_lobby_state()
+
+    async def send_lobby_state(self):
+        players = await get_all_players()
+        await self.send(text_data=json.dumps({
+            'type': 'players_list',
+            'players': players
+        }))
+
+    async def broadcast_lobby_state(self):
+        players = await get_all_players()
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'send_players_list',
-                'players': players_list
+                'players': players
             }
         )
 
-
-
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message_type = text_data_json.get('type')
-
-        if message_type == 'request_players':
-            await self.send(text_data=json.dumps({
-                'type': 'players_list',
-                'players': players_list
-            }))
-
     async def send_players_list(self, event):
-        players = event['players']
         await self.send(text_data=json.dumps({
             'type': 'players_list',
-            'players': players
+            'players': event['players']
         }))

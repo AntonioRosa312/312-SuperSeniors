@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "backend.lobby",
     "backend.leaderboard",
     "channels",
+    "backend.game",
 ]
 
 MIDDLEWARE = [
