@@ -3,3 +3,5 @@ gunicorn
 psycopg2-binary
 djangorestframework
 channels
+channels_redis
+daphne

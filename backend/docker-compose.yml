@@ -38,10 +38,14 @@ services:
       POSTGRES_USER: backenduser
       POSTGRES_PASSWORD: backendpass
       DB_HOST: postgres
+      DJANGO_SETTINGS_MODULE: backend.settings
     expose:
       - "8000"
     depends_on:
       - postgres
+      - redis
+    volumes:
+      - .:/app
 
   # Frontend service for React.
   frontend:
@@ -61,6 +65,13 @@ services:
     depends_on:
       - backend
       - frontend
+
+  # Redis service for Channels - allows for broadcasting
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:

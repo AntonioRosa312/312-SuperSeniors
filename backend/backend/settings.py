@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     "backend.core",
     "rest_framework",
     "rest_framework.authtoken",
-    "backend.lobby"
+    "backend.lobby",
+    "backend.leaderboard",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -72,6 +74,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "backend.wsgi.application"
+
+# Redis configuration (for asynchronous message handling) - for websockets
+# settings.py
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+
 
 
 # Database

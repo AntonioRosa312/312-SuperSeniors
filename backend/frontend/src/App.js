@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import LoginPage from './components/Login/LoginPage';
 import RegisterPage from './components/Register/RegisterPage';
 import GolfLobbyMenu from './components//lobby/GolfLobbyMenu';
+import Leaderboard from "./components/Leaderboard/Leaderboard";
 import './index.css';
 import './styles.css';
 
@@ -23,19 +24,23 @@ function App() {
 
   return (
   <div className="app-container">
-    {window.location.pathname === '/lobby' ? (
+    {window.location.pathname === '/lobby' || window.location.pathname === '/leaderboard' ? (
       <Routes>
         <Route path="/lobby" element={<GolfLobbyMenu />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
-    ) : (
+    )
+        : (
       <div className="content-wrapper">
         <Routes>
+
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/" element={<RegisterPage />} />
+
         </Routes>
         <button className="switch-btn" onClick={handleButtonClick}>
-          {window.location.pathname === '/register'
+          {window.location.pathname === '/register' || window.location.pathname === '/'
             ? 'Already have an account? Login'
             : 'Don’t have an account? Register'}
         </button>
