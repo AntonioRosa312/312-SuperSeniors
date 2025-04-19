@@ -5,7 +5,8 @@ import LoginPage from './components/Login/LoginPage';
 import RegisterPage from './components/Register/RegisterPage';
 import GolfLobbyMenu from './components/lobby/GolfLobbyMenu';
 import Leaderboard from "./components/Leaderboard/Leaderboard";
-import Lobby from "./components/lobby/Lobby"; // ✅ your new file
+import TestHole from './components/game/TestHole';
+import Lobby from "./components/lobby/Lobby"; // ✅ unused but keeping for reference
 
 import './index.css';
 import './styles.css';
@@ -14,7 +15,10 @@ const AppWrapper = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isAuthPage = location.pathname === '/register' || location.pathname === '/' || location.pathname === '/login';
+  const isAuthPage =
+    location.pathname === '/register' ||
+    location.pathname === '/' ||
+    location.pathname === '/login';
 
   const handleButtonClick = () => {
     if (location.pathname === '/register' || location.pathname === '/') {
@@ -30,6 +34,7 @@ const AppWrapper = () => {
         <Route path="/" element={<RegisterPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/TestHole" element={<TestHole />} />
         <Route path="/lobby/*" element={<GolfLobbyMenu />} />
         <Route path="/lobby-old" element={<GolfLobbyMenu />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
@@ -48,4 +53,5 @@ const AppWrapper = () => {
   );
 };
 
+// ✅ This is now safe because BrowserRouter is already in index.js
 export default AppWrapper;

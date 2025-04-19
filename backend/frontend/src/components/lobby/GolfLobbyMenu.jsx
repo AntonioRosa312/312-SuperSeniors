@@ -41,11 +41,12 @@ const GolfLobbyMenu = () => {
   }, []);
 
   const handleJoinGame = () => {
-    if (socket) {
+  if (socket) {
     socket.close(); // Close the WebSocket connection
-    console.log('Joining the game...');
   }
+  navigate('/TestHole'); // Navigate to the Phaser game
   };
+
 
   const handleLeaderboard = () => {
     navigate('/leaderboard');
