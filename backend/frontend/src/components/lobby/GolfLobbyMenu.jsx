@@ -20,6 +20,8 @@ const GolfLobbyMenu = () => {
 
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data);
+      console.log("[WS] Received:", data);  // <== add this line!
+
       if (data.type === 'players_list') {
         setPlayers(data.players);
       }
@@ -27,6 +29,7 @@ const GolfLobbyMenu = () => {
         setWelcomeMessage(`Welcome, ${data.username}!`);
       }
     };
+
 
     ws.onclose = () => {
       console.log('WebSocket disconnected');
@@ -96,10 +99,15 @@ const GolfLobbyMenu = () => {
           {players.length > 0 ? (
               <ul className="space-y-2">
                 {players.map((player, idx) => (
-                    <li key={idx} className="text-lg text-gray-700 break-words">
-                      {player}
-                    </li>
+                  <li key={idx} className="text-lg text-gray-700 break-words flex items-center gap-2">
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: player.color || 'gray' }}
+                    ></div>
+                    <span>{player.username}</span>
+                  </li>
                 ))}
+
               </ul>
           ) : (
               <p className="text-gray-500 text-center">Waiting for players to join...</p>

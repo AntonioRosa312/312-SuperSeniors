@@ -30,7 +30,7 @@ const AppWrapper = () => {
         <Route path="/" element={<RegisterPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/lobby" element={<Lobby />} />
+        <Route path="/lobby/*" element={<GolfLobbyMenu />} />
         <Route path="/lobby-old" element={<GolfLobbyMenu />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
