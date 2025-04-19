@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
-from backend.backend.core.views import LoginView, RegisterView  # ✅ Add this line
+from backend.core.views import LoginView, RegisterView  # ✅ Add this line
 
 urlpatterns = [
     path("admin/", admin.site.urls),

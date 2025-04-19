@@ -1,21 +1,23 @@
-
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 import LoginPage from './components/Login/LoginPage';
 import RegisterPage from './components/Register/RegisterPage';
-import GolfLobbyMenu from './components//lobby/GolfLobbyMenu';
+import GolfLobbyMenu from './components/lobby/GolfLobbyMenu';
 import Leaderboard from "./components/Leaderboard/Leaderboard";
+import Lobby from "./components/lobby/Lobby"; // ✅ your new file
+
 import './index.css';
 import './styles.css';
 
+const AppWrapper = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
 
-function App() {
-  const navigate = useNavigate();  // Use navigate instead of state for routing
+  const isAuthPage = location.pathname === '/register' || location.pathname === '/' || location.pathname === '/login';
 
   const handleButtonClick = () => {
-    // Redirect based on the current page
-    if (window.location.pathname === '/register' || window.location.pathname === '/') {
+    if (location.pathname === '/register' || location.pathname === '/') {
       navigate('/login');
     } else {
       navigate('/register');
@@ -23,32 +25,27 @@ function App() {
   };
 
   return (
-  <div className="app-container">
-    {window.location.pathname === '/lobby' || window.location.pathname === '/leaderboard' ? (
+    <div className="app-container">
       <Routes>
-        <Route path="/lobby" element={<GolfLobbyMenu />} />
+        <Route path="/" element={<RegisterPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/lobby" element={<Lobby />} />
+        <Route path="/lobby-old" element={<GolfLobbyMenu />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
-    )
-        : (
-      <div className="content-wrapper">
-        <Routes>
 
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/" element={<RegisterPage />} />
+      {isAuthPage && (
+        <div className="content-wrapper">
+          <button className="switch-btn" onClick={handleButtonClick}>
+            {location.pathname === '/register' || location.pathname === '/'
+              ? 'Already have an account? Login'
+              : 'Don’t have an account? Register'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
-        </Routes>
-        <button className="switch-btn" onClick={handleButtonClick}>
-          {window.location.pathname === '/register' || window.location.pathname === '/'
-            ? 'Already have an account? Login'
-            : 'Don’t have an account? Register'}
-        </button>
-      </div>
-    )}
-  </div>
-);
-
-}
-
-export default App;
+export default AppWrapper;

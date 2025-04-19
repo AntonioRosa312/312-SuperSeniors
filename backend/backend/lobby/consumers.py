@@ -2,17 +2,17 @@ import json
 import hashlib
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from backend.backend.core.models import AuthToken
-from .models import LobbyStatus
 
 @database_sync_to_async
 def get_username(auth_token):
+    from backend.core.models import AuthToken
     user = AuthToken.objects.get(token_hash=auth_token)
     return user.user.username
 
 @database_sync_to_async
 def get_or_create_lobby_status(username):
     from django.contrib.auth.models import User
+    from .models import LobbyStatus
     user = User.objects.get(username=username)
     lobby_status, _ = LobbyStatus.objects.get_or_create(user=user)
     return lobby_status
@@ -20,6 +20,7 @@ def get_or_create_lobby_status(username):
 @database_sync_to_async
 def update_color(username, new_color):
     from django.contrib.auth.models import User
+    from .models import LobbyStatus
     user = User.objects.get(username=username)
     lobby_status, _ = LobbyStatus.objects.get_or_create(user=user)
     lobby_status.color = new_color
@@ -28,6 +29,7 @@ def update_color(username, new_color):
 @database_sync_to_async
 def toggle_ready(username):
     from django.contrib.auth.models import User
+    from .models import LobbyStatus
     user = User.objects.get(username=username)
     lobby_status, _ = LobbyStatus.objects.get_or_create(user=user)
     lobby_status.is_ready = not lobby_status.is_ready
@@ -36,6 +38,7 @@ def toggle_ready(username):
 
 @database_sync_to_async
 def get_all_players():
+    from .models import LobbyStatus
     players = LobbyStatus.objects.all()
     return [
         {
@@ -53,8 +56,9 @@ class LobbyConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_group_name = "lobby_group"
 
-        # Auth via cookie
-        auth_token = hashlib.sha256(self.scope["cookies"].get("auth_token").encode()).hexdigest()
+        auth_token = hashlib.sha256(
+            self.scope["cookies"].get("auth_token").encode()
+        ).hexdigest()
         self.username = await get_username(auth_token)
 
         await get_or_create_lobby_status(self.username)
@@ -66,7 +70,7 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         await self.broadcast_lobby_state()
-
+        print(f"[WebSocket] Connected: {self.username}")
         await self.send(text_data=json.dumps({
             'type': 'username',
             'username': self.username
