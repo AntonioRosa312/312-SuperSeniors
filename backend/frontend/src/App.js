@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import GameCanvas from './components/game/GameCanvas';
 
 import LoginPage from './components/Login/LoginPage';
 import RegisterPage from './components/Register/RegisterPage';
@@ -49,6 +50,7 @@ const AppWrapper = () => {
           <Route path="/lobby/*" element={<GolfLobbyMenu />} />
           <Route path="/lobby-old" element={<GolfLobbyMenu />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/hole/:holeId" element={<GameCanvas />} />
         </Routes>
       )}
     </div>
