@@ -6,7 +6,7 @@ import RegisterPage from './components/Register/RegisterPage';
 import GolfLobbyMenu from './components/lobby/GolfLobbyMenu';
 import Leaderboard from "./components/Leaderboard/Leaderboard";
 import TestHole from './components/game/TestHole';
-import Lobby from "./components/lobby/Lobby"; // ✅ unused but keeping for reference
+
 
 import './index.css';
 import './styles.css';
@@ -29,27 +29,29 @@ const AppWrapper = () => {
   };
 
   return (
-    <div className="app-container">
-      <Routes>
-        <Route path="/" element={<RegisterPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/TestHole" element={<TestHole />} />
-        <Route path="/lobby/*" element={<GolfLobbyMenu />} />
-        <Route path="/lobby-old" element={<GolfLobbyMenu />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-      </Routes>
-
-      {isAuthPage && (
+      <div className="app-container">
         <div className="content-wrapper">
-          <button className="switch-btn" onClick={handleButtonClick}>
-            {location.pathname === '/register' || location.pathname === '/'
-              ? 'Already have an account? Login'
-              : 'Don’t have an account? Register'}
-          </button>
+          <Routes>
+            <Route path="/" element={<RegisterPage/>}/>
+            <Route path="/register" element={<RegisterPage/>}/>
+            <Route path="/login" element={<LoginPage/>}/>
+            <Route path="/TestHole" element={<TestHole/>}/>
+            <Route path="/lobby/*" element={<GolfLobbyMenu/>}/>
+            <Route path="/lobby-old" element={<GolfLobbyMenu/>}/>
+            <Route path="/leaderboard" element={<Leaderboard/>}/>
+          </Routes>
+
+          {isAuthPage && (
+
+              <button className="switch-btn" onClick={handleButtonClick}>
+                {location.pathname === '/register' || location.pathname === '/'
+                    ? 'Already have an account? Login'
+                    : 'Don’t have an account? Register'}
+              </button>
+
+          )}
         </div>
-      )}
-    </div>
+      </div>
   );
 };
 
