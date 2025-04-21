@@ -44,7 +44,7 @@ const GolfLobbyMenu = () => {
   if (socket) {
     socket.close(); // Close the WebSocket connection
   }
-  navigate('/TestHole'); // Navigate to the Phaser game
+  navigate('/hole/1'); // Navigate to the Phaser game
   };
 
 

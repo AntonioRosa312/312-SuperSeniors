@@ -1,12 +1,12 @@
 import React from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import GameCanvas from './components/game/GameCanvas';
 
 import LoginPage from './components/Login/LoginPage';
 import RegisterPage from './components/Register/RegisterPage';
 import GolfLobbyMenu from './components/lobby/GolfLobbyMenu';
 import Leaderboard from "./components/Leaderboard/Leaderboard";
 import TestHole from './components/game/TestHole';
+import GameCanvas from './components/game/GameCanvas';
 
 import './index.css';
 import './styles.css';

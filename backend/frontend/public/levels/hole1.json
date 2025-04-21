@@ -1,5 +1,5 @@
 {
-    "background": "skies/green.png",
+    "backgroundColor": "#228B22",
     "ballStart": { "x": 100, "y": 300 },
     "holePosition": { "x": 700, "y": 300 },
     "obstacles": [
