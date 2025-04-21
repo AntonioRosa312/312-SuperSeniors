@@ -37,9 +37,18 @@ def toggle_ready(username):
     return lobby_status.is_ready
 
 @database_sync_to_async
+def mark_user_connected(username, connected=True):
+    from django.contrib.auth.models import User
+    from .models import LobbyStatus
+    user = User.objects.get(username=username)
+    lobby_status, _ = LobbyStatus.objects.get_or_create(user=user)
+    lobby_status.connected = connected
+    lobby_status.save()
+
+@database_sync_to_async
 def get_all_players():
     from .models import LobbyStatus
-    players = LobbyStatus.objects.all()
+    players = LobbyStatus.objects.filter(connected=True)
     return [
         {
             "username": p.user.username,
@@ -62,6 +71,7 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         self.username = await get_username(auth_token)
 
         await get_or_create_lobby_status(self.username)
+        await mark_user_connected(self.username, True)
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -77,6 +87,7 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
+        await mark_user_connected(self.username, False)
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
