@@ -34,6 +34,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      WAIT_HOSTS: postgres:5432
       POSTGRES_DB: backend
       POSTGRES_USER: backenduser
       POSTGRES_PASSWORD: backendpass
