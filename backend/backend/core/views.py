@@ -6,6 +6,7 @@ import hashlib
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -66,3 +67,30 @@ class LoginView(APIView):
         )
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
+
+class CheckCookie(APIView):
+    from django.http import JsonResponse
+    from django.contrib.auth.models import User
+    def get(self, request):
+        auth_token = request.COOKIES.get('auth_token')
+        if auth_token:
+            hashed_token = hash_token(auth_token)
+            AuthToken.objects.filter(token_hash=hashed_token).exists()
+            if AuthToken.objects.filter(token_hash=hashed_token).exists():
+                return JsonResponse({'authenticated': True})
+
+        return JsonResponse({'authenticated': False})
+
+class Logout(APIView):
+    def get(self, request):
+        auth_token = request.COOKIES.get('auth_token')
+        if auth_token != None:
+            hashed_token = hash_token(auth_token)
+            query_obj = AuthToken.objects.get(token_hash=hashed_token)
+            query_obj.token_hash = None
+            query_obj.save()
+            response = HttpResponse("You have been logged out!", status=200)
+            response.delete_cookie('auth_token', samesite='Lax')
+            return response
+        else:
+            return HttpResponse("Something went wrong, were you even logged in?", status=200)

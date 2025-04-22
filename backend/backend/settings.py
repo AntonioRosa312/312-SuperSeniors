@@ -40,14 +40,16 @@ INSTALLED_APPS = [
     "backend.core",
     "rest_framework",
     "rest_framework.authtoken",
-
+    "backend.lobby",
+    "backend.leaderboard",
+    "channels",
+    "backend.game",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -75,6 +77,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "backend.wsgi.application"
+
+# Redis configuration (for asynchronous message handling) - for websockets
+# settings.py
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+
 
 
 # Database
@@ -147,28 +162,28 @@ REST_FRAMEWORK = {
 
 #Logging requests from users
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'custom': {
-            'format': 'TimeStamp: {asctime} | {levelname} | {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S',  # Human-readable time format
-        },
-    },
-    'handlers': {
-        'request_file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'backend/logs/requests.log'),
-            'formatter': 'custom',
-        },
-    },
-    'loggers': {
-        'request_logger': {
-            'handlers': ['request_file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
+ 'version': 1,
+ 'disable_existing_loggers': False,
+ 'formatters': {
+     'custom': {
+         'format': '{asctime} | {levelname} | {message}',
+         'style': '{',
+     },
+ },
+ 'handlers': {
+     'request_file': {
+         'level': 'INFO',
+         'class': 'logging.FileHandler',
+         'filename': os.path.join(BASE_DIR, 'backend/logs/requests.log'),
+         'formatter': 'custom',
+     },
+ },
+ 'loggers': {
+     'request_logger': {
+         'handlers': ['request_file'],
+         'level': 'INFO',
+         'propagate': False,
+     },
+ },
 }
+

@@ -1,25 +1,58 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+
 import LoginPage from './components/Login/LoginPage';
 import RegisterPage from './components/Register/RegisterPage';
+import GolfLobbyMenu from './components/lobby/GolfLobbyMenu';
+import Leaderboard from "./components/Leaderboard/Leaderboard";
+import TestHole from './components/game/TestHole';
+
+import './index.css';
 import './styles.css';
 
-function App() {
-  const [isRegistering, setIsRegistering] = useState(false);
+const AppWrapper = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isAuthPage =
+    location.pathname === '/register' ||
+    location.pathname === '/' ||
+    location.pathname === '/login';
+
+  const handleButtonClick = () => {
+    if (location.pathname === '/register' || location.pathname === '/') {
+      navigate('/login');
+    } else {
+      navigate('/register');
+    }
+  };
 
   return (
     <div className="app-container">
-      <div className="content-wrapper">
-        {isRegistering ? (
-          <RegisterPage />
-        ) : (
-          <LoginPage />
-        )}
-        <button className="switch-btn" onClick={() => setIsRegistering(!isRegistering)}>
-          {isRegistering ? 'Already have an account? Login' : 'Don’t have an account? Register'}
-        </button>
-      </div>
+      {isAuthPage ? (
+        <div className="content-wrapper">
+          <Routes>
+            <Route path="/" element={<RegisterPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+          </Routes>
+
+          <button className="switch-btn" onClick={handleButtonClick}>
+            {location.pathname === '/register' || location.pathname === '/'
+              ? 'Already have an account? Login'
+              : 'Don’t have an account? Register'}
+          </button>
+        </div>
+      ) : (
+        <Routes>
+          <Route path="/TestHole" element={<TestHole />} />
+          <Route path="/lobby/*" element={<GolfLobbyMenu />} />
+          <Route path="/lobby-old" element={<GolfLobbyMenu />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+        </Routes>
+      )}
     </div>
   );
-}
+};
 
-export default App;
+export default AppWrapper;

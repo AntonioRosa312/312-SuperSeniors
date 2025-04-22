@@ -1,3 +1,7 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 * {
   margin: 0;
   padding: 0;
@@ -13,7 +17,7 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-image: url('../public/login-background.png');
+  background-image: url('../public/background.png');
   background-size: cover;
   background-position: center;
 }

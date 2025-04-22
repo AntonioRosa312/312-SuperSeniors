@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 class AuthToken(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    token_hash = models.CharField(max_length=64, unique=True)  # SHA-256 is 64 characters
+    token_hash = models.CharField(max_length=64, unique=True, null=True)  # SHA-256 is 64 characters
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -16,8 +16,3 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender}: {self.content[:25]}"
-
-class HashedToken(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    hashed_token = models.CharField(max_length=128, unique=True)  # SHA-512 hash
-    created_at = models.DateTimeField(auto_now_add=True)
