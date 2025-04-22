@@ -13,7 +13,9 @@ class LobbyStatus(models.Model):
     score_by_hole = models.JSONField(default=dict)  # e.g., {1: 4, 2: 3}
 
     last_updated = models.DateTimeField(auto_now=True)
+
     connected = models.BooleanField(default=True)
+    best_score = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.user.username} - Hole {self.current_hole} - {self.color} - Score {self.score}"

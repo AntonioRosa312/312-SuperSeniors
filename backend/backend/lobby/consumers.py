@@ -55,7 +55,8 @@ def get_all_players():
             "color": p.color,
             "is_ready": p.is_ready,
             "hole": p.current_hole,
-            "score": p.score
+            "score": p.score,
+            "best_score": p.best_score,
         }
         for p in players
     ]

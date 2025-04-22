@@ -1,12 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../styles.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  //this checks to see if they already have an auth token
+   useEffect(() => {
+    fetch('/api/check_cookie', {
+      method: 'GET',
+      credentials: 'include',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) {
+          navigate('/lobby');
+        }
+      })
+      .catch(err => {
+        console.error('Cookie check failed:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [navigate, location.pathname]);
+
+   if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();

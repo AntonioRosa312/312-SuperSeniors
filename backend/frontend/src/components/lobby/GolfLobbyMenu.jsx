@@ -49,9 +49,32 @@ const GolfLobbyMenu = () => {
 
 
   const handleLeaderboard = () => {
+    if (socket) {
+    socket.close(); // Close the WebSocket connection
+  }
     navigate('/leaderboard');
     console.log('Viewing leaderboard...');
   };
+
+  const handleLogout = () => {
+  fetch('/api/logout', {
+    method: 'GET',
+    credentials: 'include',
+  })
+    .then((res) => {
+  if (res.ok) {
+    return res.text();
+  }
+  throw new Error('Logout failed');
+  })
+  .then((message) => {
+    console.log(message); // "You have been logged out!"
+    navigate('/login');
+  })
+    .catch((err) => {
+      console.error('Logout error:', err);
+    });
+};
 
   return (
       <div
@@ -117,26 +140,32 @@ const GolfLobbyMenu = () => {
 
         {/* Right: Lobby Buttons */}
         <div className="z-10 flex-grow flex flex-col items-center justify-center">
-        <div className="flex flex-col space-y-8 items-center">
-          {welcomeMessage && (
-            <p className="text-2xl font-semibold text-green-900 mb-4">{welcomeMessage}</p>
-          )}
+          <div className="flex flex-col space-y-8 items-center">
+            {welcomeMessage && (
+                <p className="text-2xl font-semibold text-green-900 mb-4">{welcomeMessage}</p>
+            )}
 
-          <button
-            onClick={handleLeaderboard}
-            className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-green-700"
-          >
-            🏆 Leaderboard
-          </button>
-          <button
-            onClick={handleJoinGame}
-            className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-lime-500 to-emerald-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-emerald-800"
-          >
-            ⛳ Join Game
-          </button>
+            <button
+                onClick={handleLeaderboard}
+                className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-green-700"
+            >
+              🏆 Leaderboard
+            </button>
+            <button
+                onClick={handleJoinGame}
+                className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-lime-500 to-emerald-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-emerald-800"
+            >
+              ⛳ Join Game
+            </button>
+            <button
+                onClick={handleLogout}
+                className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-green-700"
+            >
+              🏌️ Log Out
+            </button>
+          </div>
         </div>
-      </div>
-    {/* Golf Hole + Flag */}
+        {/* Golf Hole + Flag */}
 
         <div className="absolute bottom-14 right-80 z-10 flex flex-col items-center">
 
