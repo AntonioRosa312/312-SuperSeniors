@@ -1,24 +1,26 @@
 // File: src/components/game/GameCanvas.jsx
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
-// 1) Scene factory lives at the top of the file
+// Scene factory that generates a Phaser Scene based on level data
 const HoleSceneFactory = (levelData) => {
   return class HoleScene extends Phaser.Scene {
     constructor() {
       super({ key: `Hole${levelData.id}` });
     }
+
     preload() {
-      // only loading ball now (bg handled by backgroundColor)
+      // load the ball sprite
       this.load.image(
         'ball',
         process.env.PUBLIC_URL + '/assets/sprites/shinyball.png'
       );
     }
-    create() {
 
+    create() {
+      // create the ball with physics
       this.ball = this.physics.add.image(
         levelData.ballStart.x,
         levelData.ballStart.y,
@@ -27,32 +29,9 @@ const HoleSceneFactory = (levelData) => {
       this.ball.setCircle(16);
       this.ball.setBounce(0.8);
       this.ball.setCollideWorldBounds(true);
-      this.ball.setDrag(50,50);
+      this.ball.setDrag(40, 40);
 
-      // ---- Add the hole here ----
-      const { x: hx, y: hy } = levelData.holePosition;
-      const holeRadius = 16;
-      // 1) render a black circle for the hole
-      const hole = this.add.circle(hx, hy, holeRadius, 0x000000);
-      // 2) give it a static physics body
-      this.physics.add.existing(hole, true);
-      // 3) when the ball overlaps this hole, call back
-      this.physics.add.overlap(
-        this.ball,
-        hole,
-        () => {
-          this.ball.setVelocity(0, 0);
-          this.ball.setVisible(false);
-          console.log(`🏆 HOLE ${levelData.id} complete!`);
-          // here you could navigate to the next hole, show UI, send a WS msg, etc.
-        },
-        null,
-        this
-      );
-
-      // ---- existing code below ----
-
-      // obstacles
+      // add obstacles (walls)
       levelData.obstacles.forEach((obs) => {
         const wall = this.add.rectangle(
           obs.x,
@@ -65,7 +44,25 @@ const HoleSceneFactory = (levelData) => {
         this.physics.add.collider(this.ball, wall);
       });
 
-      // shoot on click
+      // add the hole and physics overlap
+      const { x: hx, y: hy } = levelData.holePosition;
+      const holeRadius = 16;
+      const hole = this.add.circle(hx, hy, holeRadius, 0x000000);
+      this.physics.add.existing(hole, true);
+      this.physics.add.overlap(
+        this.ball,
+        hole,
+        () => {
+          // when ball enters hole
+          this.ball.setVelocity(0, 0);
+          this.ball.setVisible(false);
+          this.game.events.emit('holeComplete', levelData.id);
+        },
+        null,
+        this
+      );
+
+      // input handler to shoot the ball
       this.input.on('pointerdown', (pointer) => {
         const angle = Phaser.Math.Angle.Between(
           this.ball.x,
@@ -80,74 +77,98 @@ const HoleSceneFactory = (levelData) => {
         );
       });
     }
+
     update() {
-      // only accept clicks when ball has almost stopped
+      // only allow new shots when the ball is fully stopped
       this.input.enabled = this.ball.body.speed < 1;
     }
   };
 };
 
-// 2) Your GameCanvas component underneath
+// React component that bootstraps Phaser and displays UI overlays
 export default function GameCanvas() {
-  const { holeId } = useParams();    // reads :holeId from /hole/:holeId
+  const { holeId } = useParams();
+  const navigate = useNavigate();
+  const [isComplete, setIsComplete] = useState(false);
   const gameRef = useRef(null);
 
   useEffect(() => {
-    // fetch the level JSON
+    // reset completion state on hole change
+    setIsComplete(false);
+
+    // load level JSON
     fetch(process.env.PUBLIC_URL + `/levels/hole${holeId}.json`)
       .then((res) => {
-        if (!res.ok) throw new Error('level not found');
+        if (!res.ok) throw new Error('Level not found');
         return res.json();
       })
       .then((levelData) => {
-        // create a scene class based on that JSON
+        // create scene class and config
         const SceneClass = HoleSceneFactory({ id: holeId, ...levelData });
-
-        // full Phaser configuration
         const config = {
           type: Phaser.AUTO,
           width: 800,
           height: 600,
           parent: 'phaser-container',
-
-          // flat‐green background from JSON or default to black
           backgroundColor: levelData.backgroundColor || '#000000',
-
           physics: {
             default: 'arcade',
-            arcade: { gravity: { y: 0 }, debug: false },
+            arcade: { gravity: { x: 0, y: 0 }, debug: false },
           },
-
           scene: SceneClass,
         };
 
-        // destroy any previous game instance and start a new one
+        // destroy existing game & start a new one
         gameRef.current?.destroy(true);
-        gameRef.current = new Phaser.Game(config);
+        const game = new Phaser.Game(config);
+        gameRef.current = game;
+
+        // listen for hole completion
+        game.events.on('holeComplete', () => {
+          setIsComplete(true);
+        });
       })
       .catch(console.error);
 
-    // cleanup on unmount / holeId change
     return () => {
-      gameRef.current?.destroy(true);
-      gameRef.current = null;
+      // cleanup on component unmount or holeId change
+      if (gameRef.current) {
+        gameRef.current.events.removeAllListeners('holeComplete');
+        gameRef.current.destroy(true);
+        gameRef.current = null;
+      }
     };
   }, [holeId]);
 
   return (
     <div className="relative w-screen h-screen">
-      {/* 1. Hole label overlay */}
+      {/* Hole label at top */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 
                       text-white text-2xl font-bold select-none">
         HOLE {holeId}
       </div>
 
-      {/* 2. Phaser will mount here */}
+      {/* Phaser game container */}
       <div
         id="phaser-container"
         className="w-full h-full"
         style={{ overflow: 'hidden' }}
       />
+
+      {/* Overlay after hole completion */}
+      {isComplete && (
+        <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col 
+                        justify-center items-center z-20 p-4">
+          <h2 className="text-white text-3xl mb-6">Hole {holeId} Complete!</h2>
+          <button
+            onClick={() => navigate(`/hole/${Number(holeId) + 1}`)}
+            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white 
+                       text-lg rounded-md focus:outline-none"
+          >
+            Next Hole
+          </button>
+        </div>
+      )}
     </div>
   );
 }
