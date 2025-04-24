@@ -14,7 +14,9 @@ class GameConsumer(AsyncWebsocketConsumer):
     player_holes = {}
 
     async def connect(self):
-        self.room_group_name = "game_room"
+        #self.room_group_name = "game_room"
+        self.hole = self.scope["url_route"]["kwargs"]["hole_id"]
+        self.room_group_name = f"game_hole_{self.hole}"
 
         # 🔐 Get username from cookie token
         auth_token = self.scope["cookies"].get("auth_token")

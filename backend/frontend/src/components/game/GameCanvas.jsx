@@ -103,11 +103,23 @@ const HoleSceneFactory = (levelData) => {
         if (username === this.username) return;
 
         let ghost = this.otherPlayers[username];
+
         if (!ghost) {
-          ghost = this.add.circle(x, y, 10, 0xff00ff); // ghost ball
+          const ball = this.add.circle(x, y, 10, 0xff00ff); // ghost ball
+
+          // 🏷️ Add username label
+          const label = this.add.text(x, y - 20, username, {
+            fontSize: '14px',
+            color: '#ffffff',
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            padding: { x: 4, y: 2 }
+          }).setOrigin(0.5);
+
+          ghost = { ball, label };
           this.otherPlayers[username] = ghost;
         } else {
-          ghost.setPosition(x, y);
+          ghost.ball.setPosition(x, y);
+          ghost.label.setPosition(x, y - 20);
         }
       };
 
