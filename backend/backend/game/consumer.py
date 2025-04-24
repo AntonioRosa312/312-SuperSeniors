@@ -10,6 +10,9 @@ def get_username(auth_token):
     return AuthToken.objects.get(token_hash=token_hash).user.username
 
 class GameConsumer(AsyncWebsocketConsumer):
+    # Dictionary to track players and their current hole
+    player_holes = {}
+
     async def connect(self):
         self.room_group_name = "game_room"
 
@@ -37,7 +40,15 @@ class GameConsumer(AsyncWebsocketConsumer):
             'username': self.username
         }))
 
+        # Initialize player's hole (start at Hole 1 by default)
+        self.player_holes[self.username] = 1  # Hole 1
+        # Notify all players on the same hole about the new player
+        #await self.send_to_hole(self.username, 1)
+
     async def disconnect(self, close_code):
+        # Remove player from hole tracking when they disconnect
+        self.player_holes.pop(self.username, None)
+
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -46,6 +57,14 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
+
+        if message_type == 'start_game':
+            hole = data.get('hole', 1)
+            GameConsumer.player_holes[self.username] = hole
+            await self.send(text_data=json.dumps({
+                'type': 'game_start',
+                'hole': hole
+            }))
 
         if message_type == 'move':
             await self.handle_move(data)
@@ -64,6 +83,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             )
 
     async def handle_move(self, data):
+        hole = self.player_holes.get(self.username, 1)
         # 🟢 Broadcast player movement
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -71,11 +91,13 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'type': 'player_moved',
                 'username': self.username,
                 'x': data.get('x'),
-                'y': data.get('y')
+                'y': data.get('y'),
+                'hole': hole
             }
         )
 
     async def handle_putt(self, data):
+        hole = self.player_holes.get(self.username, 1)
         # ⛳ Broadcast putt action
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -83,27 +105,32 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'type': 'player_putt',
                 'username': self.username,
                 'angle': data.get('angle'),
-                'power': data.get('power')
+                'power': data.get('power'),
+                'hole': hole
             }
         )
 
     # 🧩 Handler: movement
     async def player_moved(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'player_moved',
-            'username': event['username'],
-            'x': event['x'],
-            'y': event['y']
-        }))
+        hole = event['hole']
+        if self.player_holes.get(self.username) == hole:
+            await self.send(text_data=json.dumps({
+                'type': 'player_moved',
+                'username': event['username'],
+                'x': event['x'],
+                'y': event['y']
+            }))
 
     # 🧩 Handler: putt
     async def player_putt(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'player_putt',
-            'username': event['username'],
-            'angle': event['angle'],
-            'power': event['power']
-        }))
+        hole = event['hole']
+        if self.player_holes.get(self.username) == hole:
+            await self.send(text_data=json.dumps({
+                'type': 'player_putt',
+                'username': event['username'],
+                'angle': event['angle'],
+                'power': event['power']
+            }))
 
     # 🧩 Handler: chat
     async def chat_message(self, event):

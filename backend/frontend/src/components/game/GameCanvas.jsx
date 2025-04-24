@@ -20,6 +20,10 @@ const HoleSceneFactory = (levelData) => {
     }
 
     create() {
+      this.otherPlayers = {}; // <--- Store ghost players
+      this.lastSent = 0;
+      this.username = null;
+
       // create the ball with physics
       this.ball = this.physics.add.image(
         levelData.ballStart.x,
@@ -75,12 +79,43 @@ const HoleSceneFactory = (levelData) => {
           Math.cos(angle) * power,
           Math.sin(angle) * power
         );
+
+        console.log('📤 Sending putt:', angle, power);
+        this.socket?.send(JSON.stringify({
+          type: 'putt',
+          angle,
+          power,
+        }));
+
       });
+
+      this.addOrUpdateGhost = (username, x, y) => {
+        if (username === this.username) return;
+
+        let ghost = this.otherPlayers[username];
+        if (!ghost) {
+          ghost = this.add.circle(x, y, 10, 0xff00ff); // ghost ball
+          this.otherPlayers[username] = ghost;
+        } else {
+          ghost.setPosition(x, y);
+        }
+      };
+
     }
 
-    update() {
+    update(time) {
       // only allow new shots when the ball is fully stopped
       this.input.enabled = this.ball.body.speed < 1;
+
+      if (this.socket && this.ball.body.speed > 1 && (!this.lastSent || time - this.lastSent > 100)) {
+        console.log('📤 Sending move:', this.ball.x, this.ball.y);
+        this.socket.send(JSON.stringify({
+          type: 'move',
+          x: this.ball.x,
+          y: this.ball.y,
+        }));
+        this.lastSent = time;
+      }
     }
   };
 };
@@ -91,10 +126,39 @@ export default function GameCanvas() {
   const navigate = useNavigate();
   const [isComplete, setIsComplete] = useState(false);
   const gameRef = useRef(null);
+  const sceneRef = useRef(null);
 
   useEffect(() => {
     // reset completion state on hole change
     setIsComplete(false);
+
+    const socket = new WebSocket(`ws://localhost:8080/ws/game/hole/${holeId}/`);
+
+    //WEBSOCKET START
+    socket.onopen = () => console.log('✅ Connected to Game WebSocket');
+
+    socket.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      console.log('📥 Received from server:', e.data)
+      
+      if (data.type === 'connection_success') {
+        if (sceneRef.current) {
+          sceneRef.current.username = data.username;
+        }
+      }
+
+      if (data.type === 'player_moved') {
+        sceneRef.current?.addOrUpdateGhost(data.username, data.x, data.y);
+        console.log('👻 Updating ghost for', data.username, data.x, data.y);
+      }
+
+      if (data.type === 'player_putt') {
+        // Optional: animate ghost ball putts here
+      }
+    };
+
+    socket.onclose = () => console.log('❌ Disconnected from Game WebSocket');
+    //WEBSOCKET END
 
     // load level JSON
     fetch(process.env.PUBLIC_URL + `/levels/hole${holeId}.json`)
@@ -127,6 +191,11 @@ export default function GameCanvas() {
         game.events.on('holeComplete', () => {
           setIsComplete(true);
         });
+
+        // game.scene.getScene(`Hole${holeId}`).events.on('create', function () {
+        //   this.socket = socket;
+        //   sceneRef.current = this;
+        // });
       })
       .catch(console.error);
 
@@ -137,6 +206,8 @@ export default function GameCanvas() {
         gameRef.current.destroy(true);
         gameRef.current = null;
       }
+
+      socket.close();
     };
   }, [holeId]);
 
