@@ -114,6 +114,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def player_moved(self, event):
         hole = event['hole']
         if self.player_holes.get(self.username) == hole:
+
             await self.send(text_data=json.dumps({
                 'type': 'player_moved',
                 'username': event['username'],
@@ -125,6 +126,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def player_putt(self, event):
         hole = event['hole']
         if self.player_holes.get(self.username) == hole:
+
             await self.send(text_data=json.dumps({
                 'type': 'player_putt',
                 'username': event['username'],

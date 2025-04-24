@@ -81,11 +81,21 @@ const HoleSceneFactory = (levelData) => {
         );
 
         console.log('📤 Sending putt:', angle, power);
-        this.socket?.send(JSON.stringify({
-          type: 'putt',
-          angle,
-          power,
-        }));
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+          console.log("Sending putt", angle, power);
+          this.socket.send(JSON.stringify({
+              type: 'putt',
+              angle,
+              power,
+            }));
+        } else {
+          console.warn("WebSocket not ready. Cannot send message:", angle, power);
+        }
+        // this.socket?.send(JSON.stringify({
+        //   type: 'putt',
+        //   angle,
+        //   power,
+        // }));
 
       });
 
@@ -101,6 +111,8 @@ const HoleSceneFactory = (levelData) => {
         }
       };
 
+
+      this.game.events.emit('sceneReady', this); // 🚀 Let GameCanvas know the scene is ready
     }
 
     update(time) {
@@ -153,6 +165,7 @@ export default function GameCanvas() {
       }
 
       if (data.type === 'player_putt') {
+        console.log('👻 player putted', data.username, data.hole);
         // Optional: animate ghost ball putts here
       }
     };
@@ -187,15 +200,19 @@ export default function GameCanvas() {
         const game = new Phaser.Game(config);
         gameRef.current = game;
 
+
+        // 🔌 Wait for scene to be created, then attach socket
+        game.events.once('sceneReady', (sceneInstance) => {
+          sceneInstance.socket = socket;       // ✅ Inject socket into the scene
+          sceneRef.current = sceneInstance;    // Save for external updates (ghosts etc.)
+          console.log("✅ Socket attached to Phaser scene.");
+        });
+
         // listen for hole completion
         game.events.on('holeComplete', () => {
           setIsComplete(true);
         });
-
-        // game.scene.getScene(`Hole${holeId}`).events.on('create', function () {
-        //   this.socket = socket;
-        //   sceneRef.current = this;
-        // });
+        
       })
       .catch(console.error);
 
