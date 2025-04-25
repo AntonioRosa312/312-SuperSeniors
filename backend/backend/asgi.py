@@ -16,7 +16,7 @@ from channels.auth import AuthMiddlewareStack
 from backend.lobby.consumers import LobbyConsumer
 from backend.leaderboard.consumers import LeaderboardConsumer
 from backend.game.consumer import GameConsumer
-from django.urls import path
+from django.urls import path, re_path
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
@@ -27,6 +27,7 @@ application = ProtocolTypeRouter({
         URLRouter([
             path("ws/lobby/", LobbyConsumer.as_asgi()),  # This will route the websocket to the consumer
             path("ws/leaderboard/", LeaderboardConsumer.as_asgi()),  # This will route the websocket to the consumer
+            re_path(r"ws/game/hole/(?P<hole_id>\d+)/$", GameConsumer.as_asgi()),
             path("ws/game/", GameConsumer.as_asgi()),
 
         ])

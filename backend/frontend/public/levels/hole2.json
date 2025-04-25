@@ -1,0 +1,17 @@
+{
+  "backgroundColor": "#4A90E2", 
+  "ballStart": { "x": 50,  "y": 550 },
+  "holePosition": { "x": 750, "y": 50 },
+  "obstacles": [
+    
+    { "type": "wall", "x": 400, "y": 10,  "width": 800, "height": 20 },
+    { "type": "wall", "x": 400, "y": 590, "width": 800, "height": 20 },
+    { "type": "wall", "x": 10,  "y": 300, "width": 20,  "height": 600 },
+    { "type": "wall", "x": 790, "y": 300, "width": 20,  "height": 600 },
+
+   
+    { "type": "wall", "x": 200, "y": 350, "width": 20, "height": 500 },
+    { "type": "wall", "x": 400, "y": 250, "width": 20, "height": 400 },
+    { "type": "wall", "x": 600, "y": 450, "width": 20, "height": 500 }
+  ]
+}

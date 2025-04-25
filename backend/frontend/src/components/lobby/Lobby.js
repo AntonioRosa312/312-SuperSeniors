@@ -19,6 +19,9 @@ const Lobby = () => {
         setUsername(data.username);
       } else if (data.type === "players_list") {
         setPlayers(data.players);
+      } else if (data.type === "player_move") {
+      // Update player's position on the hole
+      // This is where you sync their movements
       }
     };
 
@@ -33,7 +36,8 @@ const Lobby = () => {
   };
 
   const handlePlay = () => {
-    socket?.close();
+    //socket?.close();
+    socket?.send(JSON.stringify({ type: "start_game", hole: 1 }));
     window.location.href = "/play"; // route to Phaser game
   };
 

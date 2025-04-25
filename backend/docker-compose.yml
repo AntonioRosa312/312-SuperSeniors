@@ -46,7 +46,6 @@ services:
       - postgres
       - redis
     volumes:
-      - .:/app
       -  ./backend/logs:/app/backend/logs
 
   # Frontend service for React.

@@ -43,10 +43,11 @@ const GolfLobbyMenu = () => {
     setSelectedColor(newColor);
     socket?.send(JSON.stringify({ type: 'set_color', color: newColor }));
   };
-
   const handleJoinGame = () => {
-    if (socket) socket.close();
-    navigate('/TestHole');
+  if (socket) {
+    socket.close(); // Close the WebSocket connection
+  }
+  navigate('/hole/1'); // Navigate to the Phaser game
   };
 
   const handleLeaderboard = () => {
