@@ -105,7 +105,8 @@ const HoleSceneFactory = (levelData) => {
         let ghost = this.otherPlayers[username];
 
         if (!ghost) {
-          const ball = this.add.circle(x, y, 10, 0xff00ff); // ghost ball
+          //const ball = this.add.circle(x, y, 10, 0xff00ff); // ghost ball
+          const ball = this.add.image(x, y, 'ball').setScale(0.8); // adjust scale if needed
 
           // 🏷️ Add username label
           const label = this.add.text(x, y - 20, username, {
@@ -113,7 +114,7 @@ const HoleSceneFactory = (levelData) => {
             color: '#ffffff',
             backgroundColor: 'rgba(0, 0, 0, 0.4)',
             padding: { x: 4, y: 2 }
-          }).setOrigin(0.5);
+          }).setOrigin(0.5);;//.setDepth(2); // render above ball
 
           ghost = { ball, label };
           this.otherPlayers[username] = ghost;
