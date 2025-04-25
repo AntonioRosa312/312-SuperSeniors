@@ -23,11 +23,11 @@ from backend.core.views import LoginView, RegisterView, CheckCookie, Logout
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('api/login', LoginView.as_view()),
+    path('login', LoginView.as_view()),
     path('', TemplateView.as_view(template_name="index.html")),
-    path("api/register", RegisterView.as_view()),
-    path("api/check_cookie", CheckCookie.as_view()),
-    path("api/logout", Logout.as_view()),
+    path("register", RegisterView.as_view()),
+    path("check_cookie", CheckCookie.as_view()),
+    path("logout", Logout.as_view()),
     path("lobby/", include("backend.lobby.urls"))
 ]
 

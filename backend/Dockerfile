@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.8
 
 # Install system packages
 RUN apt-get update && apt-get install -y \
@@ -29,13 +29,9 @@ COPY manage.py /app/
 COPY backend/ /app/backend/
 
 # Wait-for script
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait /wait
-RUN chmod +x /wait
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
 
 EXPOSE 8000
 
-CMD /wait && \
-    python manage.py makemigrations lobby core && \
-    python manage.py migrate && \
-    daphne -b 0.0.0.0 -p 8000 backend.asgi:application
-
+CMD ["/bin/sh"]
