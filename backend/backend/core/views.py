@@ -12,6 +12,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils.timezone import now
 from django.db import models
+import os
+from django.conf import settings
+from django.http import FileResponse, Http404
+
 
 # Token model (make sure this is in your models.py and migrated)
 from .models import AuthToken
@@ -94,3 +98,53 @@ class Logout(APIView):
             return response
         else:
             return HttpResponse("Something went wrong, were you even logged in?", status=200)
+
+
+class Avatar(APIView):
+    def get(self, request):
+        auth_token = request.COOKIES.get('auth_token')
+        if auth_token != None:
+            hashed_token = hash_token(auth_token)
+            query_obj = AuthToken.objects.get(token_hash=hashed_token)
+            filename = query_obj.profile_image
+            if filename != None:
+                file_path = os.path.join(settings.BASE_DIR, 'backend/core/profile_pics', filename)
+                # Check if file exists
+                if os.path.exists(file_path):
+                    # Return the image file as a response
+                    return FileResponse(open(file_path, 'rb'), status=200)
+                else:
+                    # Return a 404 error if the image doesn't exist
+                    raise Http404("Profile image not found")
+            else:
+                # Return a 404 error if the image doesn't exist
+                raise Http404("Profile image not found")
+        else:
+            return HttpResponse("You are not signed in!", status=404)
+
+
+
+
+    def post(self, request):
+
+        auth_token = request.COOKIES.get('auth_token')
+        if auth_token != None:
+            hashed_token = hash_token(auth_token)
+            query_obj = AuthToken.objects.get(token_hash=hashed_token)
+            avatar_file = request.FILES.get('avatar')
+            if not avatar_file:
+                return HttpResponse("No file uploaded", status=400)
+            filename = f"{query_obj.user.username}_avatar_{avatar_file.name}"
+            save_path = os.path.join(settings.BASE_DIR, 'backend/core/profile_pics', filename)
+
+            # Save file manually to disk
+            with open(save_path, 'wb+') as destination:
+                for chunk in avatar_file.chunks():
+                    destination.write(chunk)
+
+            # Save the filename in the model
+            query_obj.profile_image = filename
+            query_obj.save()
+            return FileResponse(open(save_path, 'rb'), status=200)
+        else:
+            return HttpResponse("You are not signed in!", status=404)

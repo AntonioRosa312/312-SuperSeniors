@@ -8,37 +8,99 @@ const GolfLobbyMenu = () => {
   const [socket, setSocket] = useState(null);
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const navigate = useNavigate();
+  const [showSettings, setShowSettings] = useState(false);  // Added state for settings modal
+  const [profileImage, setProfileImage] = useState(null);  // To store the selected image
+  const [profileImageURL, setProfileImageURL] = useState(null);
+
+
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080/ws/lobby/');
-    setSocket(ws);
+  // --- WebSocket connection ---
+  const ws = new WebSocket('ws://localhost:8080/ws/lobby/');
+  setSocket(ws);
 
-    ws.onopen = () => {
-      // Ask for the current player list
-      ws.send(JSON.stringify({ type: 'request_players' }));
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'request_players' }));
+  };
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    console.log("[WS] Received:", data);
+
+    if (data.type === 'players_list') {
+      setPlayers(data.players);
+    }
+    if (data.type === 'username') {
+      setWelcomeMessage(`Welcome, ${data.username}!`);
+    }
+  };
+
+  ws.onclose = () => {
+    console.log('WebSocket disconnected');
+  };
+
+  // --- Fetch profile image if one exists ---
+  fetch('/api/Avatar', {
+    method: 'GET',
+    credentials: 'include',
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("No avatar found");
+      return res.blob(); // Expecting FileResponse from Django
+    })
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      setProfileImageURL(url);
+    })
+    .catch(err => {
+      console.log("No existing profile image:", err.message);
+    });
+
+  // Cleanup
+  return () => {
+    ws.close();
+  };
+}, []);
+
+  const handleFileChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setProfileImage(file);  // Keep the actual file
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfileImageURL(reader.result);  // For preview only
     };
+    reader.readAsDataURL(file);
+  }
+};
 
-    ws.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      console.log("[WS] Received:", data);  // <== add this line!
+  const handleSubmitImage = async () => {
+  if (!profileImage) return;
 
-      if (data.type === 'players_list') {
-        setPlayers(data.players);
-      }
-      if (data.type === 'username') {
-        setWelcomeMessage(`Welcome, ${data.username}!`);
-      }
-    };
+  const formData = new FormData();
+  formData.append('avatar', profileImage);
 
+  try {
+    const response = await fetch('/api/Avatar', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
 
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
+    if (response.ok) {
+      const imageBlob = await response.blob();
+      const imageURL = URL.createObjectURL(imageBlob);
+      setProfileImageURL(imageURL);
 
-    return () => {
-      ws.close();
-    };
-  }, []);
+      console.log("Image uploaded and preview updated.");
+    } else {
+      console.error("Failed to upload image:", await response.text());
+    }
+  } catch (error) {
+    console.error("Error during upload:", error);
+  }
+};
 
   const handleJoinGame = () => {
   if (socket) {
@@ -79,11 +141,25 @@ const GolfLobbyMenu = () => {
   return (
       <div
           className="relative min-h-screen w-full flex flex-row p-6 overflow-hidden bg-gradient-to-b from-sky-200 to-green-300">
+
+         {/* Gear Icon (Floating Top Right) */}
+        <div className="absolute top-6 right-6 z-50">
+          <button
+              onClick={() => setShowSettings(true)}
+              className="text-5xl text-gray-900 drop-shadow-lg hover:text-green-800 transition-transform hover:scale-110 bg-transparent border-none p-0"
+              style={{backgroundColor: 'transparent'}} // Explicitly ensures no background
+              aria-label="Open Settings"
+          >
+            ⚙️
+          </button>
+        </div>
         {/* Animated Clouds */}
-      <div className="absolute top-10 left-0 w-full h-40 z-0 overflow-hidden pointer-events-none">
-        {/* Cloud 1 (Large Cloud) */}
-        <div className="absolute left-10 top-5 w-48 h-24 bg-white bg-opacity-80 rounded-full blur-sm animate-cloud1 opacity-90 clip-cloud1">
-          <div className="absolute w-36 h-20 bg-white bg-opacity-80 rounded-full blur-sm left-6 top-4 opacity-90 clip-cloud2" />
+        <div className="absolute top-10 left-0 w-full h-40 z-0 overflow-hidden pointer-events-none">
+          {/* Cloud 1 (Large Cloud) */}
+          <div
+              className="absolute left-10 top-5 w-48 h-24 bg-white bg-opacity-80 rounded-full blur-sm animate-cloud1 opacity-90 clip-cloud1">
+            <div
+                className="absolute w-36 h-20 bg-white bg-opacity-80 rounded-full blur-sm left-6 top-4 opacity-90 clip-cloud2" />
           <div className="absolute w-28 h-18 bg-white bg-opacity-80 rounded-full blur-sm left-12 top-2 opacity-90 clip-cloud3" />
           <div className="absolute w-32 h-16 bg-white bg-opacity-80 rounded-full blur-sm left-18 top-6 opacity-90 clip-cloud4" />
         </div>
@@ -166,12 +242,57 @@ const GolfLobbyMenu = () => {
           </div>
         </div>
         {/* Golf Hole + Flag */}
-
         <div className="absolute bottom-14 right-80 z-10 flex flex-col items-center">
 
           <div className="w-1.5 h-40 bottom-2 bg-black rounded-full relative">
             <div className="w-12 h-8 bg-red-500 absolute left-3 top-0 origin-left animate-wiggle"/>
           </div>
+          {/* Settings Modal */}
+        {showSettings && (
+          <div className="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-10 rounded-2xl shadow-xl max-w-4xl w-full h-4/5 text-center relative">
+              {/* Exit Button */}
+              <button
+                onClick={() => setShowSettings(false)}
+                className="absolute top-4 right-4 text-2xl text-gray-600 hover:text-red-500 w-8 h-8 flex items-center justify-center"
+                aria-label="Close Settings"
+              >
+                ✖
+              </button>
+
+              {/* Modal Content */}
+              <h2 className="text-3xl font-bold text-green-600 mb-6">Settings</h2>
+
+              {/* Profile Section */}
+              <div className="flex flex-col items-center mb-6">
+                {/* Display Profile Image */}
+                <img
+                  src={profileImageURL || '/default-profile.png'}  // Fallback to a default image if no profile is set
+                  className="w-40 h-40 mx-auto rounded-full object-cover shadow-md"
+                />
+                <p className="mt-4 font-semibold text-gray-700 text-xl">Username</p>
+              </div>
+
+              {/* File input for profile picture */}
+              <div className="mb-6">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="text-lg mb-4"
+                />
+                <button
+                  onClick={handleSubmitImage}
+                  className="mt-4 px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700"
+                >
+                  Save Profile Picture
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
 
         </div>
         {/* Fullscreen Leaderboard Overlay if route matches */}
