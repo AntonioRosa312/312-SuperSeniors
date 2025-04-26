@@ -95,3 +95,26 @@ class Logout(APIView):
             return response
         else:
             return HttpResponse("Something went wrong, were you even logged in?", status=200)
+
+
+class Leaderboard(APIView):
+    def post(self, request):
+        auth_token = request.COOKIES.get('auth_token')
+        if auth_token != None:
+            hashed_token = hash_token(auth_token)
+            query_obj = AuthToken.objects.get(token_hash=hashed_token)
+
+            body = json.loads(request.body)
+            total_shots = body.get("totalShots")
+
+            if total_shots != None:
+                if (query_obj.best_score == 0) or (query_obj.best_score > total_shots):
+                    query_obj.best_score = total_shots
+                    query_obj.save()
+                    return HttpResponse("best score updated", status=200)
+                else:
+                    return HttpResponse("That wasn't their best score", status=201)
+            else:
+                return HttpResponse("Unable to update total score", status=401)
+        else:
+            return HttpResponse("Unable to update total score - Cannot verify identity", status=401)
