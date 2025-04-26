@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils.timezone import now
 from django.db import models
+import html
 
 # Token model (make sure this is in your models.py and migrated)
 from .models import AuthToken
@@ -24,7 +25,7 @@ def hash_token(token):
 class RegisterView(APIView):
     def post(self, request):
         data = request.data
-        username = data.get('username')
+        username = html.escape(data.get('username'))
         password = data.get('password')
 
         if not username or not password:
@@ -94,3 +95,26 @@ class Logout(APIView):
             return response
         else:
             return HttpResponse("Something went wrong, were you even logged in?", status=200)
+
+
+class Leaderboard(APIView):
+    def post(self, request):
+        auth_token = request.COOKIES.get('auth_token')
+        if auth_token != None:
+            hashed_token = hash_token(auth_token)
+            query_obj = AuthToken.objects.get(token_hash=hashed_token)
+
+            body = json.loads(request.body)
+            total_shots = body.get("totalShots")
+
+            if total_shots != None:
+                if (query_obj.best_score == 0) or (query_obj.best_score > total_shots):
+                    query_obj.best_score = total_shots
+                    query_obj.save()
+                    return HttpResponse("best score updated", status=200)
+                else:
+                    return HttpResponse("That wasn't their best score", status=201)
+            else:
+                return HttpResponse("Unable to update total score", status=401)
+        else:
+            return HttpResponse("Unable to update total score - Cannot verify identity", status=401)
