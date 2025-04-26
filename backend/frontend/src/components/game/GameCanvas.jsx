@@ -12,7 +12,6 @@ const HoleSceneFactory = (levelData) => {
     }
 
     preload() {
-      // load the ball sprite
       this.load.image(
         'ball',
         process.env.PUBLIC_URL + '/assets/sprites/shinyball.png'
@@ -20,14 +19,11 @@ const HoleSceneFactory = (levelData) => {
     }
 
     create() {
-      // initialize shot counter
       this.shotCount = 0;
-
       this.otherPlayers = {};
       this.lastSent = 0;
       this.username = null;
 
-      // create the ball with physics
       this.ball = this.physics.add.image(
         levelData.ballStart.x,
         levelData.ballStart.y,
@@ -38,7 +34,6 @@ const HoleSceneFactory = (levelData) => {
       this.ball.setCollideWorldBounds(true);
       this.ball.setDrag(40, 40);
 
-      // add obstacles (walls)
       levelData.obstacles.forEach((obs) => {
         const wall = this.add.rectangle(
           obs.x,
@@ -51,7 +46,6 @@ const HoleSceneFactory = (levelData) => {
         this.physics.add.collider(this.ball, wall);
       });
 
-      // add the hole and physics overlap
       const { x: hx, y: hy } = levelData.holePosition;
       const holeRadius = 16;
       const hole = this.add.circle(hx, hy, holeRadius, 0x000000);
@@ -60,7 +54,6 @@ const HoleSceneFactory = (levelData) => {
         this.ball,
         hole,
         () => {
-          // when ball enters hole
           this.ball.setVelocity(0, 0);
           this.ball.setVisible(false);
           this.game.events.emit('holeComplete', levelData.id);
@@ -69,22 +62,20 @@ const HoleSceneFactory = (levelData) => {
         this
       );
 
-      // input handler to shoot the ball and count shots
       this.input.on('pointerdown', (pointer) => {
-        // enforce shot limit before shooting
         if (this.shotCount >= 8) {
           this.game.events.emit('shotLimitReached', levelData.id);
           return;
         }
 
-        // increment and check limit
         this.shotCount++;
+        this.game.events.emit('playerShot'); // 🔥 Track every shot globally
+
         if (this.shotCount >= 8) {
           this.game.events.emit('shotLimitReached', levelData.id);
           return;
         }
 
-        // calculate and apply velocity
         const angle = Phaser.Math.Angle.Between(
           this.ball.x,
           this.ball.y,
@@ -97,7 +88,6 @@ const HoleSceneFactory = (levelData) => {
           Math.sin(angle) * power
         );
 
-        // send putt event over WebSocket
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
           this.socket.send(
             JSON.stringify({ type: 'putt', angle, power })
@@ -105,7 +95,6 @@ const HoleSceneFactory = (levelData) => {
         }
       });
 
-      // ghost player updater
       this.addOrUpdateGhost = (username, x, y) => {
         if (username === this.username) return;
         let ghost = this.otherPlayers[username];
@@ -125,16 +114,13 @@ const HoleSceneFactory = (levelData) => {
         }
       };
 
-      // notify React that the scene is ready
       this.game.events.emit('sceneReady', this);
     }
 
     update(time) {
-      // allow shots only if ball stopped and under shot limit
       this.input.enabled =
         this.ball.body.speed < 1 && this.shotCount < 8;
 
-      // broadcast movement periodically
       if (
         this.socket &&
         this.ball.body.speed > 1 &&
@@ -155,11 +141,11 @@ export default function GameCanvas() {
   const navigate = useNavigate();
   const [isComplete, setIsComplete] = useState(false);
   const [shotLimitReached, setShotLimitReached] = useState(false);
+  const [totalShots, setTotalShots] = useState(0); // 🔥 Track total shots
   const gameRef = useRef(null);
   const sceneRef = useRef(null);
 
   useEffect(() => {
-    // reset states on hole change
     setIsComplete(false);
     setShotLimitReached(false);
 
@@ -182,7 +168,6 @@ export default function GameCanvas() {
     };
     socket.onclose = () => console.log('❌ Disconnected from Game WebSocket');
 
-    // load level JSON and init Phaser
     fetch(process.env.PUBLIC_URL + `/levels/hole${holeId}.json`)
       .then((res) => {
         if (!res.ok) throw new Error('Level not found');
@@ -204,15 +189,14 @@ export default function GameCanvas() {
         const game = new Phaser.Game(config);
         gameRef.current = game;
 
-        // attach socket & events once scene is ready
         game.events.once('sceneReady', (sceneInstance) => {
           sceneInstance.socket = socket;
           sceneRef.current = sceneInstance;
         });
 
-        // subscribe to events
         game.events.on('holeComplete', () => setIsComplete(true));
         game.events.on('shotLimitReached', () => setShotLimitReached(true));
+        game.events.on('playerShot', () => setTotalShots((prev) => prev + 1)); // 🔥 Count shots
       })
       .catch(console.error);
 
@@ -226,14 +210,12 @@ export default function GameCanvas() {
     };
   }, [holeId]);
 
-  // determine overlay state and navigation
   const currentHole = Number(holeId);
   const overlayActive = isComplete || shotLimitReached;
   const titleText = shotLimitReached
     ? 'Shot limit reached'
-    : `Hole ${holeId} Complete!`;
-  
-  // button logic: next hole or leaderboard
+    : (currentHole >= 6 ? 'Game Over' : `Hole ${holeId} Complete!`);
+
   let buttonText;
   let nextRoute;
   if (currentHole >= 6) {
@@ -244,7 +226,37 @@ export default function GameCanvas() {
     nextRoute = `/hole/${currentHole + 1}`;
   }
 
-  // render
+  // 🔥 Handle when button clicked
+  const handleFinish = () => {
+    fetch('/api/leaderboard/', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: sceneRef.current?.username || 'Unknown',
+        totalShots: totalShots, // 👈 sending totalShots
+      }),
+    })
+    .then((res) => {
+      if (!res.ok) throw new Error('Leaderboard update failed');
+      return res.json();
+    })
+    .then(() => {
+      navigate('/leaderboard');
+    })
+    .catch(console.error);
+  };
+
+  const handleButtonClick = () => {
+    if (currentHole >= 6) {
+      handleFinish();
+    } else {
+      navigate(nextRoute);
+    }
+  };
+
   return (
     <div className="w-screen h-screen flex justify-center items-center">
       {/* Hole label at top */}
@@ -264,8 +276,16 @@ export default function GameCanvas() {
       {overlayActive && (
         <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col justify-center items-center z-20 p-4">
           <h2 className="text-white text-3xl mb-6">{titleText}</h2>
+
+          {/* Show total shots if finishing the game */}
+          {currentHole >= 6 && (
+            <p className="text-white text-xl mb-6">
+              Total Shots: {totalShots}
+            </p>
+          )}
+
           <button
-            onClick={() => navigate(nextRoute)}
+            onClick={handleButtonClick}
             className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-lg rounded-md focus:outline-none"
           >
             {buttonText}
