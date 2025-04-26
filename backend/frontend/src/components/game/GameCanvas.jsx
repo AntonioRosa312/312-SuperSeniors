@@ -72,14 +72,14 @@ const HoleSceneFactory = (levelData) => {
       // input handler to shoot the ball and count shots
       this.input.on('pointerdown', (pointer) => {
         // enforce shot limit before shooting
-        if (this.shotCount >= 10) {
+        if (this.shotCount >= 8) {
           this.game.events.emit('shotLimitReached', levelData.id);
           return;
         }
 
         // increment and check limit
         this.shotCount++;
-        if (this.shotCount >= 10) {
+        if (this.shotCount >= 8) {
           this.game.events.emit('shotLimitReached', levelData.id);
           return;
         }
@@ -91,7 +91,7 @@ const HoleSceneFactory = (levelData) => {
           pointer.worldX,
           pointer.worldY
         );
-        const power = 250;
+        const power = 300;
         this.ball.setVelocity(
           Math.cos(angle) * power,
           Math.sin(angle) * power
@@ -244,15 +244,21 @@ export default function GameCanvas() {
     nextRoute = `/hole/${currentHole + 1}`;
   }
 
+  // render
   return (
-    <div className="relative w-screen h-screen">
+    <div className="w-screen h-screen flex justify-center items-center">
       {/* Hole label at top */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 text-white text-2xl font-bold select-none">
         HOLE {holeId}
       </div>
 
-      {/* Phaser game container */}
-      <div id="phaser-container" className="w-full h-full" style={{ overflow: 'hidden' }} />
+      {/* Centered container wrapper */}
+      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <div
+          id="phaser-container"
+          style={{ width: '800px', height: '600px', overflow: 'hidden' }}
+        />
+      </div>
 
       {/* Overlay after complete or limit reached */}
       {overlayActive && (
