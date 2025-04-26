@@ -44,7 +44,7 @@ def get_leaderboard_data():
     from backend.lobby.models import LobbyStatus
     leaders = LobbyStatus.objects.filter(best_score__gt=0).order_by('best_score')
     payload = [
-        {"player": entry.player_name, "score": entry.best_score}
+        {"player": entry.user.username, "score": entry.best_score}
         for entry in leaders
     ]
     return payload

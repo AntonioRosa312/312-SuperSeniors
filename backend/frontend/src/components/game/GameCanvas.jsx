@@ -1,5 +1,3 @@
-// File: src/components/game/GameCanvas.jsx
-
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -69,7 +67,7 @@ const HoleSceneFactory = (levelData) => {
         }
 
         this.shotCount++;
-        this.game.events.emit('playerShot'); // 🔥 Track every shot globally
+        this.game.events.emit('playerShot'); // Track every shot globally
 
         if (this.shotCount >= 8) {
           this.game.events.emit('shotLimitReached', levelData.id);
@@ -135,13 +133,13 @@ const HoleSceneFactory = (levelData) => {
   };
 };
 
-// React component that bootstraps Phaser and displays UI overlays
 export default function GameCanvas() {
   const { holeId } = useParams();
   const navigate = useNavigate();
   const [isComplete, setIsComplete] = useState(false);
   const [shotLimitReached, setShotLimitReached] = useState(false);
-  const [totalShots, setTotalShots] = useState(0); // 🔥 Track total shots
+  const [totalShots, setTotalShots] = useState(0);
+  const [username, setUsername] = useState('Unknown'); // 🔥 Track username
   const gameRef = useRef(null);
   const sceneRef = useRef(null);
 
@@ -155,8 +153,11 @@ export default function GameCanvas() {
     socket.onopen = () => console.log('✅ Connected to Game WebSocket');
     socket.onmessage = (e) => {
       const data = JSON.parse(e.data);
-      if (data.type === 'connection_success' && sceneRef.current) {
-        sceneRef.current.username = data.username;
+      if (data.type === 'connection_success') {
+        setUsername(data.username); // 🔥 Save username
+        if (sceneRef.current) {
+          sceneRef.current.username = data.username; // optional
+        }
       }
       if (data.type === 'player_moved' && sceneRef.current) {
         sceneRef.current.addOrUpdateGhost(
@@ -196,7 +197,7 @@ export default function GameCanvas() {
 
         game.events.on('holeComplete', () => setIsComplete(true));
         game.events.on('shotLimitReached', () => setShotLimitReached(true));
-        game.events.on('playerShot', () => setTotalShots((prev) => prev + 1)); // 🔥 Count shots
+        game.events.on('playerShot', () => setTotalShots((prev) => prev + 1));
       })
       .catch(console.error);
 
@@ -226,27 +227,28 @@ export default function GameCanvas() {
     nextRoute = `/hole/${currentHole + 1}`;
   }
 
-  // 🔥 Handle when button clicked
-  const handleFinish = () => {
-    fetch('/api/leaderboard', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: sceneRef.current?.username || 'Unknown',
-        totalShots: totalShots, // 👈 sending totalShots
-      }),
-    })
-    .then((res) => {
-      if (!res.ok) throw new Error('Leaderboard update failed');
-      return res.json();
-    })
-    .then(() => {
-      navigate('/leaderboard');
-    })
-    .catch(console.error);
-  };
+      const handleFinish = () => {
+        fetch('/api/leaderboard', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: username,
+            totalShots: totalShots,
+          }),
+        })
+        .then((res) => {
+          if (!res.ok) throw new Error('Leaderboard update failed');
+          return res.text(); // 🔥 Use .text() instead of .json()
+        })
+        .then(() => {
+          navigate('/leaderboard');
+        })
+        .catch((error) => {
+          console.error('Error submitting score:', error);
+        });
+      };
 
   const handleButtonClick = () => {
     if (currentHole >= 6) {
@@ -258,7 +260,12 @@ export default function GameCanvas() {
 
   return (
     <div className="w-screen h-screen flex justify-center items-center">
-      {/* Hole label at top */}
+      {/* 🔥 Username label at top */}
+      <div className="absolute top-2 left-4 z-10 text-white text-lg font-bold select-none">
+        Player: {username}
+      </div>
+
+      {/* Hole label */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 text-white text-2xl font-bold select-none">
         HOLE {holeId}
       </div>
@@ -276,7 +283,6 @@ export default function GameCanvas() {
         <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col justify-center items-center z-20 p-4">
           <h2 className="text-white text-3xl mb-6">{titleText}</h2>
 
-          {/* Show total shots if finishing the game */}
           {currentHole >= 6 && (
             <p className="text-white text-xl mb-6">
               Total Shots: {totalShots}
@@ -294,4 +300,3 @@ export default function GameCanvas() {
     </div>
   );
 }
-
