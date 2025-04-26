@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this!
 
 const Leaderboard = () => {
   const [scores, setScores] = useState([]);
   const [socket, setSocket] = useState(null);
+  const navigate = useNavigate(); // And this!
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8080/ws/leaderboard/');
@@ -29,14 +31,28 @@ const Leaderboard = () => {
 
   const sortedScores = scores.sort((a, b) => a.score - b.score);
 
+  const handleBackClick = () => {
+    navigate('/lobby');
+  };
+
   return (
-    <div className="w-full h-screen bg-cover bg-center relative flex flex-col items-center justify-center p-6 !bg-[url('../public/login-background.png')]">
+    <div className="w-full h-screen bg-cover bg-center relative flex flex-col items-center justify-start p-6 pt-10 !bg-[url('../public/login-background.png')]">
+
+      {/* Back to Lobby Button */}
+      <button
+        onClick={handleBackClick}
+        className="mb-6 self-start bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition"
+      >
+        ← Back to Lobby
+      </button>
+
       <h1
         style={{ fontFamily: 'Luckiest Guy' }}
         className="text-6xl text-yellow-300 mb-10 drop-shadow-[4px_4px_0px_#000] tracking-wider"
       >
         Leaderboard
       </h1>
+
       <div className="w-full max-w-3xl bg-white bg-opacity-80 rounded-2xl shadow-2xl p-8 overflow-y-auto">
         <table className="w-full text-left table-auto">
           <thead>
