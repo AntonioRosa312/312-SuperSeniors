@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils.timezone import now
 from django.db import models
+import html
 
 # Token model (make sure this is in your models.py and migrated)
 from .models import AuthToken
@@ -24,7 +25,7 @@ def hash_token(token):
 class RegisterView(APIView):
     def post(self, request):
         data = request.data
-        username = data.get('username')
+        username = html.escape(data.get('username'))
         password = data.get('password')
 
         if not username or not password:
