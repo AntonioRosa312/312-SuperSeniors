@@ -5,7 +5,6 @@ import LoginPage from './components/Login/LoginPage';
 import RegisterPage from './components/Register/RegisterPage';
 import GolfLobbyMenu from './components/lobby/GolfLobbyMenu';
 import Leaderboard from "./components/Leaderboard/Leaderboard";
-import TestHole from './components/game/TestHole';
 import GameCanvas from './components/game/GameCanvas';
 
 import './index.css';
@@ -46,9 +45,7 @@ const AppWrapper = () => {
         </div>
       ) : (
         <Routes>
-          <Route path="/TestHole" element={<TestHole />} />
           <Route path="/lobby/*" element={<GolfLobbyMenu />} />
-          <Route path="/lobby-old" element={<GolfLobbyMenu />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/hole/:holeId" element={<GameCanvas />} />
         </Routes>
