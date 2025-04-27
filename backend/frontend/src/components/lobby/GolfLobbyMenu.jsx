@@ -10,7 +10,9 @@ const GolfLobbyMenu = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080/ws/lobby/');
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const ws = new WebSocket(`${protocol}://${window.location.host}/ws/lobby/`);
+
     setSocket(ws);
 
     ws.onopen = () => {

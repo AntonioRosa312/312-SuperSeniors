@@ -165,9 +165,11 @@ export default function GameCanvas() {
     setIsComplete(false);
     setShotLimitReached(false);
 
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const socket = new WebSocket(
-      `ws://localhost:8080/ws/game/hole/${holeId}/`
+      `${protocol}://${window.location.host}/ws/game/hole/${holeId}/`
     );
+
     socket.onopen = () => console.log('✅ Connected to Game WebSocket');
     socket.onmessage = (e) => {
       const data = JSON.parse(e.data);
