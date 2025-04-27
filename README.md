@@ -5,7 +5,7 @@ Before running docker compose up, please cd into backend from the root directory
 
 The backend Django logs are located in backend/backend/logs/requests.log
 
-nginx/frontend logs are located in backend/nginx/logs
+nginx/frontend logs are located in backend/nginx/logs/
 
 Link to deployed app: https://super-seniors.cse312.dev
 
