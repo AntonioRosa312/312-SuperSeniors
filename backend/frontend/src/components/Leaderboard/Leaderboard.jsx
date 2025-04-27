@@ -8,7 +8,7 @@ const Leaderboard = () => {
 
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${protocol}://${window.location.host}/leaderboard`);
+    const ws = new WebSocket(`${protocol}://${window.location.host}/ws/leaderboard/`);
     setSocket(ws);
 
     ws.onopen = () => {
