@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils.timezone import now
 from django.db import models
+from backend.lobby.models import LobbyStatus
 import html
 
 # Token model (make sure this is in your models.py and migrated)
@@ -99,22 +100,26 @@ class Logout(APIView):
 
 class Leaderboard(APIView):
     def post(self, request):
-        auth_token = request.COOKIES.get('auth_token')
-        if auth_token != None:
-            hashed_token = hash_token(auth_token)
-            query_obj = AuthToken.objects.get(token_hash=hashed_token)
 
-            body = json.loads(request.body)
-            total_shots = body.get("totalShots")
+        all_lobby_statuses = LobbyStatus.objects.select_related('user').all()
 
-            if total_shots != None:
-                if (query_obj.best_score == 0) or (query_obj.best_score > total_shots):
-                    query_obj.best_score = total_shots
-                    query_obj.save()
-                    return HttpResponse("best score updated", status=200)
-                else:
-                    return HttpResponse("That wasn't their best score", status=201)
+        body = json.loads(request.body)
+        username = body.get("username")
+        total_shots = body.get("totalShots")
+        # Loop through all and find the matching one
+        matching_status = None
+        for status in all_lobby_statuses:
+            if status.user.username == username:
+                matching_status = status
+                break
+
+        if matching_status:
+            # Now you can update the best score
+            if (matching_status.best_score == 0) or (matching_status.best_score > total_shots):
+                matching_status.best_score = total_shots
+                matching_status.save()
+                return HttpResponse("Best score updated", status=200)
             else:
-                return HttpResponse("Unable to update total score", status=401)
+                return HttpResponse("That wasn't their best score", status=201)
         else:
-            return HttpResponse("Unable to update total score - Cannot verify identity", status=401)
+            return HttpResponse("Player not found", status=404)

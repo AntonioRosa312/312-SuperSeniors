@@ -53,7 +53,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-
     "backend.middleware.request_logger.RequestLoggingMiddleware",
 ]
 
@@ -166,8 +165,9 @@ LOGGING = {
  'disable_existing_loggers': False,
  'formatters': {
      'custom': {
-         'format': '{asctime} | {levelname} | {message}',
+         'format': 'TimeStamp: {asctime} | {levelname} | {message}',
          'style': '{',
+         'datefmt': '%Y-%m-%d %H:%M:%S',  # Human-readable time format
      },
  },
  'handlers': {
