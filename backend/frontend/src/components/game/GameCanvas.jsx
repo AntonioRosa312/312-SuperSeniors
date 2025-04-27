@@ -180,7 +180,7 @@ export default function GameCanvas() {
         }
       }
       if (data.type === 'player_moved' && sceneRef.current) {
-        sceneRef.current.addOrUpdateGhost(
+	sceneRef.current.addOrUpdateGhost(
           data.username,
           data.x,
           data.y
