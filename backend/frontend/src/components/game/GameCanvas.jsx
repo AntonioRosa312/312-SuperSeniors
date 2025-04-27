@@ -112,6 +112,27 @@ const HoleSceneFactory = (levelData) => {
         }
       };
 
+            // Function to show just the label for the local player
+      this.showLabelOnly = (username, x, y) => {
+        // Check if the ghost already exists for this player
+        let ghost = this.otherPlayers[username];
+
+        if (!ghost) {
+          const label = this.add.text(x, y - 20, username, {
+            fontSize: '14px',
+            color: '#ffffff',
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            padding: { x: 4, y: 2 }
+          }).setOrigin(0.5);
+
+          ghost = { label };
+          this.otherPlayers[username] = ghost;
+        }
+
+        // Update label position
+        ghost.label.setPosition(x, y - 20);
+      };
+
       this.removeGhost = (username, sceneRef) => {
         const ghost = this.otherPlayers[username];
         if (ghost) {
@@ -157,7 +178,7 @@ export default function GameCanvas() {
   const [isComplete, setIsComplete] = useState(false);
   const [shotLimitReached, setShotLimitReached] = useState(false);
   const [totalShots, setTotalShots] = useState(0);
-  const [username, setUsername] = useState('Unknown'); // 🔥 Track username
+  const [username, setUsername] = useState(null); // 🔥 Track username
   const gameRef = useRef(null);
   const sceneRef = useRef(null);
 
@@ -173,16 +194,25 @@ export default function GameCanvas() {
       const data = JSON.parse(e.data);
       if (data.type === 'connection_success') {
         setUsername(data.username); // 🔥 Save username
-        if (sceneRef.current) {
-          sceneRef.current.username = data.username; // optional
-        }
+        // if (sceneRef.current) {
+        //   sceneRef.current.username = data.username; // optional
+        // }
       }
       if (data.type === 'player_moved' && sceneRef.current) {
-        sceneRef.current.addOrUpdateGhost(
-          data.username,
-          data.x,
-          data.y
+        if (data.username !== username){
+            sceneRef.current.addOrUpdateGhost(
+            data.username,
+            data.x,
+            data.y
         );
+        }
+        else {
+          sceneRef.current.showLabelOnly(
+            data.username,
+            data.x,
+            data.y
+        );
+        }
       }
       if (data.type === 'player_left') {
         if (sceneRef.current?.removeGhost) {
@@ -233,7 +263,7 @@ export default function GameCanvas() {
       }
       socket.close();
     };
-  }, [holeId]);
+  }, [holeId, username]);
 
   const currentHole = Number(holeId);
   const overlayActive = isComplete || shotLimitReached;
