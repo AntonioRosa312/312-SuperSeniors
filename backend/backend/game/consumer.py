@@ -51,6 +51,15 @@ class GameConsumer(AsyncWebsocketConsumer):
         # Remove player from hole tracking when they disconnect
         self.player_holes.pop(self.username, None)
 
+        # 📣 Notify others that this player left
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'player_left',
+                'username': self.username
+            }
+        )
+
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -142,4 +151,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             'type': 'chat',
             'username': event['username'],
             'message': event['message']
+        }))
+
+    # 🧩 Handler: player left
+    async def player_left(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'player_left',
+            'username': event['username']
         }))

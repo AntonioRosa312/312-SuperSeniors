@@ -112,6 +112,24 @@ const HoleSceneFactory = (levelData) => {
         }
       };
 
+      this.removeGhost = (username, sceneRef) => {
+        const ghost = this.otherPlayers[username];
+        if (ghost) {
+          const { ball, label } = ghost;
+      
+          sceneRef.current.tweens.add({
+            targets: [ball, label],
+            alpha: 0,       // fade to invisible
+            duration: 500,  // half a second
+            onComplete: () => {
+              if (ball) ball.destroy();
+              if (label) label.destroy();
+              delete this.otherPlayers[username];
+            }
+          });
+        }
+      };
+
       this.game.events.emit('sceneReady', this);
     }
 
@@ -165,6 +183,12 @@ export default function GameCanvas() {
           data.x,
           data.y
         );
+      }
+      if (data.type === 'player_left') {
+        if (sceneRef.current?.removeGhost) {
+          sceneRef.current.removeGhost(data.username, sceneRef);
+          console.log('👻 Removed ghost for', data.username);
+        }
       }
     };
     socket.onclose = () => console.log('❌ Disconnected from Game WebSocket');
