@@ -15,6 +15,7 @@ const GolfLobbyMenu = () => {
   const [profileImage, setProfileImage] = useState(null);  // To store the selected image
   const [profileImageURL, setProfileImageURL] = useState(null);
   const [username,      setUsername]      = useState('');
+  const [imageUploadMessage, setImageUploadMessage] = useState('');
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8080/ws/lobby/');
@@ -94,10 +95,12 @@ const GolfLobbyMenu = () => {
       const imageBlob = await response.blob();
       const imageURL = URL.createObjectURL(imageBlob);
       setProfileImageURL(imageURL);
+      setImageUploadMessage('✅ Profile picture updated successfully!');
 
       console.log("Image uploaded and preview updated.");
     } else {
       console.error("Failed to upload image:", await response.text());
+      setImageUploadMessage('❌ Failed to update profile picture.');
     }
   } catch (error) {
     console.error("Error during upload:", error);
@@ -313,6 +316,9 @@ const GolfLobbyMenu = () => {
                >
                  Save Profile Picture
                </button>
+               {imageUploadMessage && (
+                  <p className="mt-2 text-green-700 font-medium">{imageUploadMessage}</p>
+                )}
              </div>
            </div>
          </div>
