@@ -155,16 +155,17 @@ class Leaderboard(APIView):
 
         if matching_status:
             # Now you can update the best score
+            # ─── NEW: bump the cumulative counters ───
+            stats, _ = PlayerStats.objects.get_or_create(user=matching_status.user)
+            stats.shots_taken += int(total_shots)
+            stats.holes_played += int(total_holes)
+            stats.save()
+            # ─────────────────────────────────────────
 
             if (matching_status.best_score == 0) or (matching_status.best_score > total_shots):
                 matching_status.best_score = total_shots
                 matching_status.save()
-                # ─── NEW: bump the cumulative counters ───
-                stats, _ = PlayerStats.objects.get_or_create(user=matching_status.user)
-                stats.shots_taken += int(total_shots)
-                stats.holes_played += int(total_holes)
-                stats.save()
-                # ─────────────────────────────────────────
+
 
                 return HttpResponse("Best score updated", status=200)
             else:
