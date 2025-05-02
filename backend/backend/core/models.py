@@ -5,6 +5,8 @@ class AuthToken(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     token_hash = models.CharField(max_length=64, unique=True, null=True)  # SHA-256 is 64 characters
     created_at = models.DateTimeField(auto_now_add=True)
+    profile_image = models.CharField(max_length=64, unique=True, null=True)
+    ball_image = models.CharField(max_length=64, unique=True, null=True)
 
     def __str__(self):
         return f"AuthToken for {self.user.username}"

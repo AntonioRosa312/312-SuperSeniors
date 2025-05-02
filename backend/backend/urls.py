@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
-from backend.core.views import LoginView, RegisterView, CheckCookie, Logout, Leaderboard
+from backend.core.views import LoginView, RegisterView, CheckCookie, Logout, Leaderboard, Avatar
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -29,6 +29,7 @@ urlpatterns = [
     path("api/check_cookie", CheckCookie.as_view()),
     path("api/logout", Logout.as_view()),
     path("api/leaderboard", Leaderboard.as_view()),
+    path("api/Avatar", Avatar.as_view()),
     path("lobby/", include("backend.lobby.urls"))
 ]
 
