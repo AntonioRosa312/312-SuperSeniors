@@ -169,10 +169,20 @@ const GolfLobbyMenu = () => {
           >
             ⛳ Join Game
           </button>
+            <button
+          onClick={() => {
+            if (socket) socket.close();
+            navigate('/achievements');
+          }}
+          className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-yellow-700"
+        >
+          🏅 Achievements
+        </button>
           <button
             onClick={handleLogout}
             className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-green-700"
           >
+            
             🏌️ Log Out
           </button>
         </div>
