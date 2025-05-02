@@ -59,11 +59,14 @@ const GolfLobbyMenu = () => {
      .catch(err => {
        console.log("No existing profile image:", err.message);
      });
+   if (!showSettings) {
+    setImageUploadMessage('');
+  }
 
     return () => {
       ws.close();
     };
-  }, []);
+  }, [showSettings]);
 
   const handleFileChange = (e) => {
   const file = e.target.files[0];
