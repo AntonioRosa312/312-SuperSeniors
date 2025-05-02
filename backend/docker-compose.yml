@@ -47,6 +47,8 @@ services:
       - redis
     volumes:
       -  ./backend/logs:/app/backend/logs
+      - ./backend/core/profile_pics:/app/backend/core/profile_pics
+      - ./backend/core/ball_pics:/app/backend/core/ball_pics
 
   # Frontend service for React.
   frontend:
