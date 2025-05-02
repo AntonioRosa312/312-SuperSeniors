@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import Leaderboard from '../Leaderboard/Leaderboard';
+import Stats from '../Stats/Stats';
+
 
 const GolfLobbyMenu = () => {
   const [players, setPlayers] = useState([]);
@@ -12,6 +14,7 @@ const GolfLobbyMenu = () => {
   const [showSettings, setShowSettings] = useState(false);  // Added state for settings modal
   const [profileImage, setProfileImage] = useState(null);  // To store the selected image
   const [profileImageURL, setProfileImageURL] = useState(null);
+  const [username,      setUsername]      = useState('');
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8080/ws/lobby/');
@@ -30,7 +33,8 @@ const GolfLobbyMenu = () => {
       }
       if (data.type === 'username') {
         setWelcomeMessage(`Welcome, ${data.username}!`);
-        setUserName(data.username);  // Save username
+        setUsername(data.username);
+        setUserName(data.username);
       }
     };
 
@@ -246,6 +250,13 @@ const GolfLobbyMenu = () => {
             ⛳ Join Game
           </button>
           <button
+            onClick={() => navigate('stats')}
+            className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded shadow"
+            >
+            📊 View Stats
+
+          </button>
+          <button
             onClick={handleLogout}
             className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-green-700"
           >
@@ -311,6 +322,7 @@ const GolfLobbyMenu = () => {
       {/* Route for Leaderboard */}
       <Routes>
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="stats"       element={<Stats username={username} />} />
       </Routes>
     </div>
   );

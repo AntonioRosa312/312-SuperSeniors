@@ -3,6 +3,9 @@ import json
 import secrets
 import hashlib
 
+from rest_framework.decorators import api_view
+from .serializers import PlayerStatsSerializer
+
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
@@ -18,9 +21,23 @@ import os
 from django.conf import settings
 from django.http import FileResponse, Http404
 from PIL import Image
+from ..core.models import PlayerStats
 
 # Token model (make sure this is in your models.py and migrated)
 from .models import AuthToken
+
+@api_view(["GET"])
+def player_stats(request, username):
+    """
+    GET /api/player-stats/<username>/
+    """
+    try:
+        stats = PlayerStats.objects.get(user__username=username)
+    except PlayerStats.DoesNotExist:
+        return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = PlayerStatsSerializer(stats)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 def hash_token(token):
@@ -125,6 +142,10 @@ class Leaderboard(APIView):
         body = json.loads(request.body)
         username = body.get("username")
         total_shots = body.get("totalShots")
+        total_holes = body.get("totalHoles")
+
+
+
         # Loop through all and find the matching one
         matching_status = None
         for status in all_lobby_statuses:
@@ -134,9 +155,17 @@ class Leaderboard(APIView):
 
         if matching_status:
             # Now you can update the best score
+
             if (matching_status.best_score == 0) or (matching_status.best_score > total_shots):
                 matching_status.best_score = total_shots
                 matching_status.save()
+                # ─── NEW: bump the cumulative counters ───
+                stats, _ = PlayerStats.objects.get_or_create(user=matching_status.user)
+                stats.shots_taken += int(total_shots)
+                stats.holes_played += int(total_holes)
+                stats.save()
+                # ─────────────────────────────────────────
+
                 return HttpResponse("Best score updated", status=200)
             else:
                 return HttpResponse("That wasn't their best score", status=201)

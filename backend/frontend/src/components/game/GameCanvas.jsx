@@ -178,6 +178,7 @@ export default function GameCanvas() {
   const [isComplete, setIsComplete] = useState(false);
   const [shotLimitReached, setShotLimitReached] = useState(false);
   const [totalShots, setTotalShots] = useState(0);
+  const [totalHoles, setTotalHoles] = useState(0);
   const [username, setUsername] = useState(null); // 🔥 Track username
   const gameRef = useRef(null);
   const sceneRef = useRef(null);
@@ -249,7 +250,8 @@ export default function GameCanvas() {
           sceneRef.current = sceneInstance;
         });
 
-        game.events.on('holeComplete', () => setIsComplete(true));
+        game.events.on('holeComplete', () => {setIsComplete(true);
+        setTotalHoles((prev) => prev + 1)});
         game.events.on('shotLimitReached', () => setShotLimitReached(true));
         game.events.on('playerShot', () => setTotalShots((prev) => prev + 1));
       })
@@ -290,6 +292,7 @@ export default function GameCanvas() {
           body: JSON.stringify({
             username: username,
             totalShots: totalShots,
+            totalHoles: 6,
           }),
         })
         .then((res) => {

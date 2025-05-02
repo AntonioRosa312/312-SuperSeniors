@@ -8,6 +8,7 @@ from .models import LobbyStatus
 
 @receiver(post_save, sender=LobbyStatus)
 def leaderboard_update_signal(sender, instance, **kwargs):
+    print(f"[DEBUG] leaderboard_update_signal fired for user={instance.user.username} best_score={instance.best_score}")
     # Only trigger if there's a valid best_score (e.g., not 0)
     if instance.best_score > 0:
         channel_layer = get_channel_layer()
