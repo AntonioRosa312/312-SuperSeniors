@@ -54,6 +54,7 @@ const AppWrapper = () => {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/hole/:holeId" element={<GameCanvas />} />
           <Route path="/achievements" element={<Achievements />} />
+
         </Routes>
       )}
     </div>

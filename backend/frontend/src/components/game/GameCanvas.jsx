@@ -178,6 +178,7 @@ export default function GameCanvas() {
   const [isComplete, setIsComplete] = useState(false);
   const [shotLimitReached, setShotLimitReached] = useState(false);
   const [totalShots, setTotalShots] = useState(0);
+  const [totalHoles, setTotalHoles] = useState(0);
   const [username, setUsername] = useState(null); // 🔥 Track username
   const gameRef = useRef(null);
   const sceneRef = useRef(null);
@@ -249,6 +250,7 @@ export default function GameCanvas() {
           sceneRef.current = sceneInstance;
         });
 
+
         game.events.on('holeComplete', () => {
           setIsComplete(true);
         
@@ -282,6 +284,9 @@ export default function GameCanvas() {
           }
         });
         
+        game.events.on('holeComplete', () => {setIsComplete(true);
+        setTotalHoles((prev) => prev + 1)});
+        game.events.on('shotLimitReached', () => setShotLimitReached(true));
         game.events.on('playerShot', () => setTotalShots((prev) => prev + 1));
       })
       .catch(console.error);
@@ -311,6 +316,7 @@ export default function GameCanvas() {
     buttonText = 'Next Hole';
     nextRoute = `/hole/${currentHole + 1}`;
   }
+
 
   const unlockFirstPutt = (username) => {
     fetch('/api/achievements/', {
@@ -373,6 +379,30 @@ export default function GameCanvas() {
       });
   };
   
+=======
+      const handleFinish = () => {
+        fetch('/api/leaderboard', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: username,
+            totalShots: totalShots,
+            totalHoles: 6,
+          }),
+        })
+        .then((res) => {
+          if (!res.ok) throw new Error('Leaderboard update failed');
+          return res.text(); // 🔥 Use .text() instead of .json()
+        })
+        .then(() => {
+          navigate('/leaderboard');
+        })
+        .catch((error) => {
+          console.error('Error submitting score:', error);
+        });
+      };
 
   const handleButtonClick = () => {
     if (currentHole >= 6) {
