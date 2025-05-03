@@ -23,6 +23,11 @@ from django.http import FileResponse, Http404
 from PIL import Image
 from ..core.models import PlayerStats
 
+
+
+import os
+from django.views.decorators.http import require_GET
+from django.utils.decorators import method_decorator
 # Token model (make sure this is in your models.py and migrated)
 from .models import AuthToken
 
@@ -69,7 +74,29 @@ class RegisterView(APIView):
             return Response({'message': 'Username already exists'}, status=400)
 
         User.objects.create_user(username=username, password=password)
+
+        # 🔽 Add the new user to achievements.json
+        try:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            json_path = os.path.join(base_dir, 'achievements', 'achievements.json')
+
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+
+            if 'users' not in data:
+                data['users'] = {}
+
+            if username not in data['users']:
+                data['users'][username] = []
+
+            with open(json_path, 'w') as f:
+                json.dump(data, f, indent=2)
+
+        except Exception as e:
+            print("⚠️ Failed to update achievements.json:", e)
+
         return Response({'message': 'User registered successfully'}, status=201)
+
 
 
 class LoginView(APIView):
@@ -107,15 +134,16 @@ class LoginView(APIView):
         return response
 
 class CheckCookie(APIView):
-    from django.http import JsonResponse
-    from django.contrib.auth.models import User
     def get(self, request):
         auth_token = request.COOKIES.get('auth_token')
         if auth_token:
             hashed_token = hash_token(auth_token)
-            AuthToken.objects.filter(token_hash=hashed_token).exists()
-            if AuthToken.objects.filter(token_hash=hashed_token).exists():
-                return JsonResponse({'authenticated': True})
+            token = AuthToken.objects.filter(token_hash=hashed_token).first()
+            if token:
+                return JsonResponse({
+                    'authenticated': True,
+                    'username': token.user.username  # ✅ include username
+                })
 
         return JsonResponse({'authenticated': False})
 
@@ -172,6 +200,55 @@ class Leaderboard(APIView):
                 return HttpResponse("That wasn't their best score", status=201)
         else:
             return HttpResponse("Player not found", status=404)
+
+
+class AchievementsView(APIView):
+    def get(self, request):
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        json_path = os.path.join(base_dir, 'achievements', 'achievements.json')
+
+        try:
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+            return Response(data)
+        except FileNotFoundError:
+            return Response({'error': 'Achievements file not found'}, status=404)
+        except json.JSONDecodeError:
+            return Response({'error': 'Invalid achievements JSON format'}, status=500)
+        
+    def post(self, request):
+        try:
+            payload = json.loads(request.body)
+            username = payload.get('username')
+            achievement_key = payload.get('achievement_key')
+
+            if not username or not achievement_key:
+                return JsonResponse({'error': 'Missing username or achievement_key'}, status=400)
+
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            json_path = os.path.join(base_dir, 'achievements', 'achievements.json')
+
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+
+            if achievement_key not in [a['key'] for a in data['achievements']]:
+                return JsonResponse({'error': 'Invalid achievement key'}, status=400)
+
+            if username not in data['users']:
+                data['users'][username] = []
+
+            if achievement_key not in data['users'][username]:
+                data['users'][username].append(achievement_key)
+
+            with open(json_path, 'w') as f:
+                json.dump(data, f, indent=2)
+
+            return JsonResponse({'status': 'achievement unlocked'})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except FileNotFoundError:
+            return JsonResponse({'error': 'Achievements file not found'}, status=404)          
 
 
 class Avatar(APIView):

@@ -250,6 +250,40 @@ export default function GameCanvas() {
           sceneRef.current = sceneInstance;
         });
 
+
+        game.events.on('holeComplete', () => {
+          setIsComplete(true);
+        
+          // Unlock "first_putt" on any completed hole
+          if (username) {
+            unlockFirstPutt(username);
+          }
+        });
+        game.events.on('shotLimitReached', () => {
+          setShotLimitReached(true);
+          
+          // Unlock "shot_limit" achievement
+          if (username) {
+            fetch('/api/achievements/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                username: username,
+                achievement_key: 'shot_limit',
+              }),
+            })
+              .then(res => res.json())
+              .then(data => {
+                console.log('Shot limit achievement response:', data);
+              })
+              .catch(error => {
+                console.error('Failed to unlock shot limit achievement:', error);
+              });
+          }
+        });
+        
         game.events.on('holeComplete', () => {setIsComplete(true);
         setTotalHoles((prev) => prev + 1)});
         game.events.on('shotLimitReached', () => setShotLimitReached(true));
@@ -283,6 +317,69 @@ export default function GameCanvas() {
     nextRoute = `/hole/${currentHole + 1}`;
   }
 
+
+  const unlockFirstPutt = (username) => {
+    fetch('/api/achievements/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username,
+        achievement_key: 'first_putt',
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log('Achievement unlock response:', data);
+      })
+      .catch(error => {
+        console.error('Failed to unlock achievement:', error);
+      });
+  };
+  
+
+  const handleFinish = () => {
+    // Unlock "Finished All 6 Holes"
+    fetch('/api/achievements/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username,
+        achievement_key: 'finish_all_holes',
+      }),
+    }).then(res => res.json()).then(data => {
+      console.log('Unlocked finish_all_holes:', data);
+    }).catch(err => {
+      console.error('Failed to unlock finish_all_holes:', err);
+    });
+  
+    // Then update leaderboard
+    fetch('/api/leaderboard', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username,
+        totalShots: totalShots,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Leaderboard update failed');
+        return res.text();
+      })
+      .then(() => {
+        navigate('/leaderboard');
+      })
+      .catch((error) => {
+        console.error('Error submitting score:', error);
+      });
+  };
+  
+=======
       const handleFinish = () => {
         fetch('/api/leaderboard', {
           method: 'POST',

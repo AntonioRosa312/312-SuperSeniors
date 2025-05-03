@@ -7,6 +7,8 @@ import GolfLobbyMenu from './components/lobby/GolfLobbyMenu';
 import Leaderboard from "./components/Leaderboard/Leaderboard";
 import TestHole from './components/game/TestHole';
 import GameCanvas from './components/game/GameCanvas';
+import Achievements from './components/Achievements/AchScreen';
+
 
 import './index.css';
 import './styles.css';
@@ -51,6 +53,7 @@ const AppWrapper = () => {
           <Route path="/lobby-old" element={<GolfLobbyMenu />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/hole/:holeId" element={<GameCanvas />} />
+          <Route path="/achievements" element={<Achievements />} />
 
         </Routes>
       )}
