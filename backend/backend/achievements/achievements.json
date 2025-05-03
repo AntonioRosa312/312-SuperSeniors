@@ -1,19 +1,14 @@
 {
-  "baseAchievements": [
+  "achievements": [
     {
       "key": "first_putt",
       "name": "First Putt",
       "description": "Complete your first hole!"
     },
     {
-      "key": "perfect_game",
-      "name": "Perfect Game",
-      "description": "Finish all holes under the shot limit."
-    },
-    {
-      "key": "all_holes",
+      "key": "finish_all_holes",
       "name": "Finish all 6 Holes",
-      "description": "Finish all 6 holes"
+      "description": "Complete all holes"
     },
     {
       "key": "shot_limit",
@@ -27,7 +22,15 @@
       "perfect_game"
     ],
     "player2": [],
-    "Donald": [],
-    "D": []
+    "Donald": [
+      "first_putt",
+      "shot_limit",
+      "finished_all_holes"
+    ],
+    "D": [
+      "first_putt",
+      "shot_limit",
+      "finished_all_holes"
+    ]
   }
 }

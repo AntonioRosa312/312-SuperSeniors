@@ -25,8 +25,7 @@ const Achievements = () => {
 
             const defaultAchievements = [
               { key: 'first_putt', name: 'First Putt', description: 'Take your first shot' },
-              { key: 'perfect_game', name: 'Perfect Hole (1 shot)', description: 'Sink the ball in one shot' },
-              { key: 'finished_all', name: 'Finished All 6 Holes', description: 'Complete all holes' },
+              { key: 'finished_all_holes', name: 'Finished All 6 Holes', description: 'Complete all holes' },
               { key: 'shot_limit', name: 'Shot Limit Failure!', description: 'Reach shot limit on a hole' },
             ];
 
