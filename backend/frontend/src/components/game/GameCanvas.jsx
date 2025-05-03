@@ -348,7 +348,7 @@ export default function GameCanvas() {
       },
       body: JSON.stringify({
         username: username,
-        achievement_key: 'finish_all_holes',
+        achievement_key: 'finished_all_holes',
       }),
     }).then(res => res.json()).then(data => {
       console.log('Unlocked finish_all_holes:', data);
