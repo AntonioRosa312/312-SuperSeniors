@@ -221,6 +221,7 @@ class AchievementsView(APIView):
             payload = json.loads(request.body)
             username = payload.get('username')
             achievement_key = payload.get('achievement_key')
+            print("👀 POST payload:", payload)
 
             if not username or not achievement_key:
                 return JsonResponse({'error': 'Missing username or achievement_key'}, status=400)

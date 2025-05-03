@@ -365,6 +365,7 @@ export default function GameCanvas() {
       body: JSON.stringify({
         username: username,
         totalShots: totalShots,
+        totalHoles: 6,
       }),
     })
       .then((res) => {
@@ -378,31 +379,7 @@ export default function GameCanvas() {
         console.error('Error submitting score:', error);
       });
   };
-  
-=======
-      const handleFinish = () => {
-        fetch('/api/leaderboard', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            username: username,
-            totalShots: totalShots,
-            totalHoles: 6,
-          }),
-        })
-        .then((res) => {
-          if (!res.ok) throw new Error('Leaderboard update failed');
-          return res.text(); // 🔥 Use .text() instead of .json()
-        })
-        .then(() => {
-          navigate('/leaderboard');
-        })
-        .catch((error) => {
-          console.error('Error submitting score:', error);
-        });
-      };
+
 
   const handleButtonClick = () => {
     if (currentHole >= 6) {

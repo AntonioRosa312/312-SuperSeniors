@@ -35,7 +35,6 @@ urlpatterns = [
     path('api/achievements/', AchievementsView.as_view()),
     path("api/Avatar", Avatar.as_view()),
     path("lobby/", include("backend.lobby.urls")),
-
     path('api/', include('backend.core.urls')),
 ]
 

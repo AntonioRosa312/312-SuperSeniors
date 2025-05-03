@@ -6,7 +6,7 @@
       "description": "Complete your first hole!"
     },
     {
-      "key": "finish_all_holes",
+      "key": "finished_all_holes",
       "name": "Finish all 6 Holes",
       "description": "Complete all holes"
     },
@@ -17,20 +17,11 @@
     }
   ],
   "users": {
-    "player1": [
-      "first_putt",
-      "perfect_game"
+    "Test": [
+      "first_putt"
     ],
-    "player2": [],
-    "Donald": [
-      "first_putt",
-      "shot_limit",
-      "finished_all_holes"
-    ],
-    "D": [
-      "first_putt",
-      "shot_limit",
-      "finished_all_holes"
+    "Me": [
+      "first_putt"
     ]
   }
 }
