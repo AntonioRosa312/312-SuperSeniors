@@ -47,6 +47,7 @@ services:
       - redis
     volumes:
       -  ./backend/logs:/app/backend/logs
+      -  ./backend/achievements:/app/backend/achievements
 
   # Frontend service for React.
   frontend:
