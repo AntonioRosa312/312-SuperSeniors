@@ -19,6 +19,7 @@ const HoleSceneFactory = (levelData) => {
     create() {
       this.shotCount = 0;
       this.otherPlayers = {};
+      this.loadedAvatars = {};
       this.lastSent = 0;
       this.username = null;
 
@@ -93,59 +94,228 @@ const HoleSceneFactory = (levelData) => {
         }
       });
 
+      // this.addOrUpdateGhost = (username, x, y) => {
+      //   if (username === this.username) return;
+      //   let ghost = this.otherPlayers[username];
+      //   if (!ghost) {
+      //     const ball = this.add.image(x, y, 'ball').setScale(0.8);
+      //     const label = this.add.text(x, y - 20, username, {
+      //       fontSize: '14px',
+      //       color: '#ffffff',
+      //       backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      //       padding: { x: 4, y: 2 }
+      //     }).setOrigin(0.5);
+      //     ghost = { ball, label };
+      //     this.otherPlayers[username] = ghost;
+      //   } else {
+      //     ghost.ball.setPosition(x, y);
+      //     ghost.label.setPosition(x, y - 20);
+      //   }
+      // };
+      
+      
+      
       this.addOrUpdateGhost = (username, x, y) => {
         if (username === this.username) return;
+      
         let ghost = this.otherPlayers[username];
-        if (!ghost) {
-          const ball = this.add.image(x, y, 'ball').setScale(0.8);
-          const label = this.add.text(x, y - 20, username, {
-            fontSize: '14px',
-            color: '#ffffff',
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            padding: { x: 4, y: 2 }
-          }).setOrigin(0.5);
-          ghost = { ball, label };
-          this.otherPlayers[username] = ghost;
-        } else {
+        const defaultAvatar = process.env.PUBLIC_URL + '/assets/sprites/default-avatar.png';
+
+        // If avatar is already cached, use it immediately
+        if (this.loadedAvatars[username]) {
+          placeGhost.call(this, this.loadedAvatars[username]);
+          return;
+        }
+
+        const fetchAvatar = () => {
+          const cacheBuster = Date.now(); // Or use a version/hash if available
+          return fetch(`/api/Avatar_ball?username=${encodeURIComponent(username)}&cb=${cacheBuster}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache',
+            },
+          })
+            .then(res => {
+              if (!res.ok) throw new Error('No profile image found');
+              return res.blob();
+            })
+            .then(blob => {
+              const objectUrl = URL.createObjectURL(blob);
+              const avatarKey = `avatar_${username}_custom_${new Date().getTime()}`;
+              this.loadedAvatars[username] = avatarKey; // Cache key
+      
+              if (!this.textures.exists(avatarKey)) {
+                this.load.image(avatarKey, objectUrl);
+                this.load.once('complete', () => {
+                  URL.revokeObjectURL(objectUrl);
+                  placeGhost.call(this, avatarKey);
+                });
+                this.load.start();
+              } else {
+                placeGhost.call(this, avatarKey);
+              }
+            })
+            .catch(() => {
+              const avatarKey = `avatar_${username}_default`;
+              this.loadedAvatars[username] = avatarKey; // Cache key
+
+              if (!this.textures.exists(avatarKey)) {
+                this.load.image(avatarKey, defaultAvatar);
+                this.load.once('complete', () => {
+                  placeGhost.call(this, avatarKey);
+                });
+                this.load.start();
+              } else {
+                placeGhost.call(this, avatarKey);
+              }
+            });
+        };
+      
+        fetchAvatar();
+      
+        function placeGhost(avatarKey) {
+          if (!ghost) {
+            const ball = this.add.image(x, y, 'ball').setScale(0.8);
+      
+            const label = this.add.text(x, y - 20, username, {
+              fontSize: '14px',
+              color: '#ffffff',
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              padding: { x: 4, y: 2 },
+            }).setOrigin(0, 0.5);
+      
+            const avatar = this.add.image(label.x + label.width + 8, label.y, avatarKey)
+              .setScale(0.4)
+              .setOrigin(0, 0.5);
+      
+            ghost = { ball, label, avatar };
+            this.otherPlayers[username] = ghost;
+          }
+      
           ghost.ball.setPosition(x, y);
           ghost.label.setPosition(x, y - 20);
+          ghost.avatar.setPosition(ghost.label.x + ghost.label.width + 8, y - 20);
         }
       };
+      
+
 
             // Function to show just the label for the local player
+      // this.showLabelOnly = (username, x, y) => {
+      //   // Check if the ghost already exists for this player
+      //   let ghost = this.otherPlayers[username];
+
+      //   if (!ghost) {
+      //     const label = this.add.text(x, y - 20, username, {
+      //       fontSize: '14px',
+      //       color: '#ffffff',
+      //       backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      //       padding: { x: 4, y: 2 }
+      //     }).setOrigin(0.5);
+
+      //     ghost = { label };
+      //     this.otherPlayers[username] = ghost;
+      //   }
+
+      //   // Update label position
+      //   ghost.label.setPosition(x, y - 20);
+      // };
       this.showLabelOnly = (username, x, y) => {
-        // Check if the ghost already exists for this player
+        if (username === this.username) return;
+      
         let ghost = this.otherPlayers[username];
+        const defaultAvatar = process.env.PUBLIC_URL + '/assets/sprites/default-avatar.png';
 
-        if (!ghost) {
-          const label = this.add.text(x, y - 20, username, {
-            fontSize: '14px',
-            color: '#ffffff',
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            padding: { x: 4, y: 2 }
-          }).setOrigin(0.5);
-
-          ghost = { label };
-          this.otherPlayers[username] = ghost;
+        // If avatar is already cached, use it immediately
+        if (this.loadedAvatars[username]) {
+          placeGhost.call(this, this.loadedAvatars[username]);
+          return;
         }
+      
+        const fetchAvatar = () => {
+          return fetch(`/api/Avatar_ball?username=${encodeURIComponent(username)}`, {
+            method: 'GET',
+            credentials: 'include',
+          })
+            .then(res => {
+              if (!res.ok) throw new Error('No profile image found');
+              return res.blob();
+            })
+            .then(blob => {
+              const objectUrl = URL.createObjectURL(blob);
+              const avatarKey = `avatar_${username}_custom_${new Date().getTime()}`;
+              this.loadedAvatars[username] = avatarKey; // Cache key
+      
+              if (!this.textures.exists(avatarKey)) {
+                this.load.image(avatarKey, objectUrl);
+                this.load.once('complete', () => {
+                  URL.revokeObjectURL(objectUrl);
+                  placeGhost.call(this, avatarKey);
+                });
+                this.load.start();
+              } else {
+                placeGhost.call(this, avatarKey);
+              }
+            })
+            .catch(() => {
+              const avatarKey = `avatar_${username}_default`;
+              this.loadedAvatars[username] = avatarKey; // Cache key
 
-        // Update label position
-        ghost.label.setPosition(x, y - 20);
+              if (!this.textures.exists(avatarKey)) {
+                this.load.image(avatarKey, defaultAvatar);
+                this.load.once('complete', () => {
+                  placeGhost.call(this, avatarKey);
+                });
+                this.load.start();
+              } else {
+                placeGhost.call(this, avatarKey);
+              }
+            });
+        };
+      
+        fetchAvatar();
+      
+        function placeGhost(avatarKey) {
+          if (!ghost) {
+      
+            const label = this.add.text(x, y - 20, username, {
+              fontSize: '14px',
+              color: '#ffffff',
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              padding: { x: 4, y: 2 },
+            }).setOrigin(0, 0.5);
+      
+            const avatar = this.add.image(label.x + label.width + 8, label.y, avatarKey)
+              .setScale(0.4)
+              .setOrigin(0, 0.5);
+      
+            ghost = { label, avatar };
+            this.otherPlayers[username] = ghost;
+          }
+      
+          ghost.label.setPosition(x, y - 20);
+          ghost.avatar.setPosition(ghost.label.x + ghost.label.width + 8, y - 20);
+        }
       };
+
 
       this.removeGhost = (username, sceneRef) => {
         const ghost = this.otherPlayers[username];
         if (ghost) {
-          const { ball, label } = ghost;
+          const { ball, label, avatar } = ghost;
       
           sceneRef.current.tweens.add({
-            targets: [ball, label],
+            targets: [ball, label, avatar],
             alpha: 0,       // fade to invisible
             duration: 500,  // half a second
             onComplete: () => {
               if (ball) ball.destroy();
               if (label) label.destroy();
+              if (avatar) avatar.destroy();
               delete this.otherPlayers[username];
+              delete this.loadedAvatars[username];
             }
           });
         }
@@ -203,7 +373,7 @@ export default function GameCanvas() {
             sceneRef.current.addOrUpdateGhost(
             data.username,
             data.x,
-            data.y
+            data.y,
         );
         }
         else {

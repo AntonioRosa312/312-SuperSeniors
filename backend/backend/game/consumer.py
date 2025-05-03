@@ -9,6 +9,7 @@ def get_username(auth_token):
     token_hash = hashlib.sha256(auth_token.encode()).hexdigest()
     return AuthToken.objects.get(token_hash=token_hash).user.username
 
+
 class GameConsumer(AsyncWebsocketConsumer):
     # Dictionary to track players and their current hole
     player_holes = {}
@@ -103,7 +104,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'username': self.username,
                 'x': data.get('x'),
                 'y': data.get('y'),
-                'hole': hole
+                'hole': hole,
             }
         )
 
@@ -130,7 +131,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'type': 'player_moved',
                 'username': event['username'],
                 'x': event['x'],
-                'y': event['y']
+                'y': event['y'],
             }))
 
     # 🧩 Handler: putt
