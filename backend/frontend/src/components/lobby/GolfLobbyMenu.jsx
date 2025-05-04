@@ -265,7 +265,7 @@ const GolfLobbyMenu = () => {
           🏅 Achievements
         </button>
           <button
-            onClick={() => navigate('stats')}
+            onClick={() => navigate('/lobby/stats')}
             className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded shadow"
             >
             📊 View Stats

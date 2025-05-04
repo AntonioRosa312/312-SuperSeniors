@@ -19,6 +19,10 @@
   "users": {
     "Tester": [
       "first_putt"
+    ],
+    "brandon": [
+      "first_putt",
+      "finished_all_holes"
     ]
   }
 }

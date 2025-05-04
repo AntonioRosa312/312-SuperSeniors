@@ -1,39 +1,61 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
 
-const Stats = ({ username }) => {
-  const [stats, setStats] = useState(null);
-  const navigate = useNavigate();
+function Stats({ username }) {
+  // 1) zero-state by default
+  const initialStats = {
+    holes_played: 0,
+    shots_taken: 0,
+    handicap:    0,
+  };
+  const [stats, setStats] = useState(initialStats);
 
+  // 2) fetch and fall back to zeros on error/404
   useEffect(() => {
-    if (!username) return;
+    if (!username) {
+      setStats(initialStats);
+      return;
+    }
+
     fetch(`/api/player-stats/${username}/`)
       .then(res => {
-        if (!res.ok) throw new Error("Not found");
+        if (!res.ok) {
+          setStats(initialStats);
+          throw new Error("No stats found");
+        }
         return res.json();
       })
       .then(data => setStats(data))
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        setStats(initialStats);
+      });
   }, [username]);
 
-  if (!stats) return <p className="text-center mt-8">Loading stats…</p>;
-
   return (
-    <div className="p-8 max-w-md mx-auto bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4 text-green-900">Your Stats</h2>
-      <ul className="space-y-2">
-        <li>🕳 Holes Played: <strong>{stats.holes_played}</strong></li>
-        <li>⛳ Shots Taken: <strong>{stats.shots_taken}</strong></li>
-        <li>📊 Handicap: <strong>{stats.handicap}</strong></li>
+    <div className="p-8 max-w-md mx-auto bg-white rounded-lg shadow">
+      {/* 3) show a friendly message when everything is zero */}
+      {stats.holes_played === 0 &&
+       stats.shots_taken === 0 &&
+       stats.handicap === 0 && (
+        <p className="mb-4 text-gray-600">
+          No games played yet—get out on the green!
+        </p>
+      )}
+
+      <ul className="space-y-4">
+        <li>
+          <strong>Holes played: </strong> {stats.holes_played}
+        </li>
+        <li>
+          <strong>Shots taken: </strong> {stats.shots_taken}
+        </li>
+        <li>
+          <strong>Current handicap: </strong> {stats.handicap}
+        </li>
       </ul>
-      <button
-        onClick={() => navigate(-1)}
-        className="mt-6 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-      >
-        ← Back
-      </button>
     </div>
   );
-};
+}
 
 export default Stats;
+
