@@ -19,7 +19,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
-from backend.core.views import LoginView, RegisterView, CheckCookie, Logout, Leaderboard, Avatar, Avatar_ball
+
+from backend.core.views import LoginView, RegisterView, CheckCookie, Logout, Leaderboard, Avatar, player_stats, AchievementsView, Avatar_ball
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -29,8 +30,13 @@ urlpatterns = [
     path("api/check_cookie", CheckCookie.as_view()),
     path("api/logout", Logout.as_view()),
     path("api/leaderboard", Leaderboard.as_view()),
+    path("lobby/", include("backend.lobby.urls")),
+    path('achievements/', AchievementsView.as_view()),
+    path('api/achievements/', AchievementsView.as_view()),
     path("api/Avatar", Avatar.as_view()),
     path("lobby/", include("backend.lobby.urls")),
     path("api/Avatar_ball", Avatar_ball.as_view()),
+    path('api/', include('backend.core.urls')),
+
 ]
 

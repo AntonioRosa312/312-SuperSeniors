@@ -9,3 +9,5 @@ nginx/frontend logs are located in backend/nginx/logs/
 
 Link to deployed app: https://super-seniors.cse312.dev
 
+Note: In the scenario that you compose up one version of the game, then clone a different version of the game (deadline version). Be sure to open the new version in an incognito tab to ensure caching is prevented between versions of the game, allowing changes to be seen.
+

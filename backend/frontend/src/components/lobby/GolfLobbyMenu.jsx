@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import Leaderboard from '../Leaderboard/Leaderboard';
+import Stats from '../Stats/Stats';
+
 
 const GolfLobbyMenu = () => {
   const [players, setPlayers] = useState([]);
@@ -12,6 +14,8 @@ const GolfLobbyMenu = () => {
   const [showSettings, setShowSettings] = useState(false);  // Added state for settings modal
   const [profileImage, setProfileImage] = useState(null);  // To store the selected image
   const [profileImageURL, setProfileImageURL] = useState(null);
+  const [username,      setUsername]      = useState('');
+  const [imageUploadMessage, setImageUploadMessage] = useState('');
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8080/ws/lobby/');
@@ -30,7 +34,8 @@ const GolfLobbyMenu = () => {
       }
       if (data.type === 'username') {
         setWelcomeMessage(`Welcome, ${data.username}!`);
-        setUserName(data.username);  // Save username
+        setUsername(data.username);
+        setUserName(data.username);
       }
     };
 
@@ -54,11 +59,14 @@ const GolfLobbyMenu = () => {
      .catch(err => {
        console.log("No existing profile image:", err.message);
      });
+   if (!showSettings) {
+    setImageUploadMessage('');
+  }
 
     return () => {
       ws.close();
     };
-  }, []);
+  }, [showSettings]);
 
   const handleFileChange = (e) => {
   const file = e.target.files[0];
@@ -90,10 +98,12 @@ const GolfLobbyMenu = () => {
       const imageBlob = await response.blob();
       const imageURL = URL.createObjectURL(imageBlob);
       setProfileImageURL(imageURL);
+      setImageUploadMessage('✅ Profile picture updated successfully!');
 
       console.log("Image uploaded and preview updated.");
     } else {
       console.error("Failed to upload image:", await response.text());
+      setImageUploadMessage('❌ Failed to update profile picture.');
     }
   } catch (error) {
     console.error("Error during upload:", error);
@@ -245,10 +255,27 @@ const GolfLobbyMenu = () => {
           >
             ⛳ Join Game
           </button>
+            <button
+          onClick={() => {
+            if (socket) socket.close();
+            navigate('/achievements');
+          }}
+          className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-yellow-700"
+        >
+          🏅 Achievements
+        </button>
+          <button
+            onClick={() => navigate('/lobby/stats')}
+            className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded shadow"
+            >
+            📊 View Stats
+
+          </button>
           <button
             onClick={handleLogout}
             className="w-72 text-2xl px-6 py-4 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl shadow-lg hover:scale-105 transform transition duration-300 border-2 border-green-700"
           >
+            
             🏌️ Log Out
           </button>
         </div>
@@ -302,6 +329,9 @@ const GolfLobbyMenu = () => {
                >
                  Save Profile Picture
                </button>
+               {imageUploadMessage && (
+                  <p className="mt-2 text-green-700 font-medium">{imageUploadMessage}</p>
+                )}
              </div>
            </div>
          </div>
@@ -311,6 +341,7 @@ const GolfLobbyMenu = () => {
       {/* Route for Leaderboard */}
       <Routes>
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="stats"       element={<Stats username={username} />} />
       </Routes>
     </div>
   );

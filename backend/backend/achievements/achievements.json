@@ -1,0 +1,28 @@
+{
+  "achievements": [
+    {
+      "key": "first_putt",
+      "name": "First Putt",
+      "description": "Complete your first hole!"
+    },
+    {
+      "key": "finished_all_holes",
+      "name": "Finish all 6 Holes",
+      "description": "Complete all holes"
+    },
+    {
+      "key": "shot_limit",
+      "name": "Shot Limit Failure!",
+      "description": "Reach the shot limit"
+    }
+  ],
+  "users": {
+    "Tester": [
+      "first_putt"
+    ],
+    "brandon": [
+      "first_putt",
+      "finished_all_holes"
+    ]
+  }
+}
