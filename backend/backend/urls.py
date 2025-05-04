@@ -20,7 +20,7 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 
 
-from backend.core.views import LoginView, RegisterView, CheckCookie, Logout, Leaderboard, Avatar, player_stats, AchievementsView 
+from backend.core.views import LoginView, RegisterView, CheckCookie, Logout, Leaderboard, Avatar, player_stats, AchievementsView, Avatar_ball
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -35,6 +35,8 @@ urlpatterns = [
     path('api/achievements/', AchievementsView.as_view()),
     path("api/Avatar", Avatar.as_view()),
     path("lobby/", include("backend.lobby.urls")),
+    path("api/Avatar_ball", Avatar_ball.as_view()),
     path('api/', include('backend.core.urls')),
+
 ]
 

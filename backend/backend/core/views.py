@@ -312,3 +312,29 @@ class Avatar(APIView):
             return FileResponse(open(save_path, 'rb'), status=200)
         else:
             return HttpResponse("You are not signed in!", status=404)
+
+               
+
+class Avatar_ball(APIView):
+    def get(self, request):
+        username = request.GET.get('username')
+        if not username:
+            return HttpResponse("Username is required", status=400)
+
+        try:
+            token_obj = AuthToken.objects.select_related('user').get(user__username=username)
+            filename = token_obj.ball_image
+            if not filename:
+                raise Http404("No profile image set")
+
+            file_path = os.path.join(settings.BASE_DIR, 'backend/core/ball_pics', filename)
+            if os.path.exists(file_path):
+                response = FileResponse(open(file_path, 'rb'), status=200)
+                response['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+                response['Pragma'] = 'no-cache'
+                response['Expires'] = '0'
+                return response
+            else:
+                raise Http404("Profile image file not found")
+        except AuthToken.DoesNotExist:
+            raise Http404("User profile not found")
